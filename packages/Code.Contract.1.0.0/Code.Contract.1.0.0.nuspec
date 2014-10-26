@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Code.Contract</id>
+    <version>1.0.0</version>
+    <title>Microsoft Code Contracts for Net3.5</title>
+    <authors>Emmanuel Benitez</authors>
+    <owners>Emmanuel Benitez</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Code Contracts provide a language-agnostic way to express coding assumptions in .NET programs. The contracts take the form of preconditions, postconditions, and object invariants. Contracts act as checked documentation of your external and internal APIs. The contracts are used to improve testing via runtime checking, enable static contract verification, and documentation generation.</description>
+  </metadata>
+</package>

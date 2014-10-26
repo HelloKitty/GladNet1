@@ -1,0 +1,7 @@
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\OmegaNet.Server.dll
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\OmegaNet.Server.pdb
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\obj\Debug\OmegaNet.Server.dll
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\obj\Debug\OmegaNet.Server.pdb
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\Lidgren.Network.dll
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\Lidgren.Network.pdb
+c:\users\andrew blakely\documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\obj\Debug\OmegaNet.Server.csprojResolveAssemblyReference.cache

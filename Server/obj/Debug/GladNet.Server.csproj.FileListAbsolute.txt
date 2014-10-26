@@ -1,0 +1,13 @@
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\obj\Debug\GladNet.Server.csprojResolveAssemblyReference.cache
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\GladNet.Server.exe
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\GladNet.Server.pdb
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\Lidgren.Network.dll
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\bin\Debug\Lidgren.Network.pdb
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\obj\Debug\GladNet.Server.exe
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\OmegaNet\OmegaNet\obj\Debug\GladNet.Server.pdb
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\GladNet\bin\Debug\Lidgren.Network.dll
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\GladNet\bin\Debug\Lidgren.Network.pdb
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\GladNet\bin\Debug\Server.exe
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\GladNet\bin\Debug\Server.pdb
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\GladNet\obj\Debug\Server.exe
+C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\GladNet\obj\Debug\Server.pdb
