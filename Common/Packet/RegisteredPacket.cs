@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GladNet.Common
 {
-	internal class RegisteredPacket : Attribute
+	internal sealed class RegisteredPacket : Attribute
 	{
 
 	}

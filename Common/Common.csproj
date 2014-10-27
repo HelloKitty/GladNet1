@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <NoWarn>0168</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,9 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HigherDotNetAddins35">
-      <HintPath>..\..\HigherDotNetAddins35\HigherDotNetAddins35\bin\Release\HigherDotNetAddins35.dll</HintPath>
-    </Reference>
     <Reference Include="Lidgren.Network">
       <HintPath>..\..\..\GitHub\GladNetLidgren\Lidgren.Network\bin\Release\Lidgren.Network.dll</HintPath>
     </Reference>
@@ -52,17 +50,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Execution Wrappers\AssemblyInteropObj.cs" />
+    <Compile Include="Exceptions\SerializationException.cs" />
+    <Compile Include="Packet\Handlers\Handler.cs" />
+    <Compile Include="Packet\Handlers\HigherLevelPacketHandler.cs" />
+    <Compile Include="Packet\Handlers\LidgrenMessageConverter.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
     <Compile Include="Packet\Packages\ResponsePackage.cs" />
     <Compile Include="Packet\Packages\EventPackage.cs" />
     <Compile Include="Packet\Packages\INetworkPackage.cs" />
+    <Compile Include="Packet\Packet Types\EmptyPacket.cs" />
     <Compile Include="Packet\Packet Types\ProtobufSyncPackage.cs" />
     <Compile Include="Packet\Packet.cs" />
     <Compile Include="Packet\PacketAttribute.cs" />
     <Compile Include="Packet\RegisteredPacket.cs" />
+    <Compile Include="Packet\Serializers\ProtobufNetSerializer.cs" />
+    <Compile Include="Packet\Serializers\SerializationManager.cs" />
     <Compile Include="Packet\Serializers\Serializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Register\IHashContainer.cs" />
+    <Compile Include="Register\IRegisterable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

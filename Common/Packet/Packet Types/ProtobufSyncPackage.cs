@@ -16,7 +16,7 @@ namespace GladNet.Common
 	/// </summary>
 	[RegisteredPacket]
 	[ProtoContract]
-	public class ProtobufSyncPackage : Packet
+	internal class ProtobufSyncPackage : Packet
 	{
 		private readonly object syncobj = new object();
 
@@ -27,7 +27,8 @@ namespace GladNet.Common
 			get { return _TypeIncludeList.ToList(); }
 		}
 
-		public ProtobufSyncPackage(int includeSize)
+		public ProtobufSyncPackage(int includeSize) 
+			: base(false)
 		{
 			_TypeIncludeList = new Dictionary<int, string>(includeSize);
 		}
@@ -36,6 +37,7 @@ namespace GladNet.Common
 		/// Protobuf-net constructor
 		/// </summary>
 		protected ProtobufSyncPackage()
+			: base(false)
 		{
 
 		}

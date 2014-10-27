@@ -1,5 +1,6 @@
 ﻿using GladNet.Common;
 using GladNet.Server.Logging;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +9,16 @@ using System.Threading.Tasks;
 
 namespace GladNet.Server.Connections
 {
-	[PacketAttribute(5)]
+	[PacketAttribute(21)]
+	[ProtoContract]
 	public class TestPacket : Packet
 	{
+		[ProtoMember(1)]
+		int i = 0;
+		public TestPacket() : base(false)
+		{
 
+		}
 	}
 
 	public class Templogger : Logger
@@ -46,6 +53,7 @@ namespace GladNet.Server.Connections
 
 		protected override Peer OnAttemptedConnection(ConnectionRequest request)
 		{
+			this.ClassLogger.LogError("Recieved a connection success trying to create connection object for IP: " + request.RemoteConnectionEndpoint.ToString() + " ID: " + request.UniqueConnectionId);
 			return null;
 		}
 

@@ -1,4 +1,7 @@
-﻿using GladNet.Common;
+﻿using Common.Exceptions;
+using Common.Packet.Handlers;
+using Common.Packet.Serializers;
+using GladNet.Common;
 using GladNet.Server.Connections;
 using GladNet.Server.Logging;
 using Lidgren.Network;
@@ -45,10 +48,10 @@ namespace GladNet.Server
 			get { return _InConnections; }
 		}
 
-		private IReadOnlyDictionary<int, ServerPeer> _OutConnections;
-		public IReadOnlyDictionary<int, ServerPeer> OutConnections 
+		private Dictionary<NetPeer, ServerPeer> _OutConnections;
+		public IEnumerable<ServerPeer> OutConnections 
 		{ 
-			get { return _OutConnections; }
+			get { return _OutConnections.Values; }
 		}
 
 		public bool isListening { get; private set; }
@@ -57,11 +60,26 @@ namespace GladNet.Server
 
 		public readonly string ExpectedClientHailMessage;
 
+		public readonly SerializationManager SerializerRegister;
+
+		private readonly LidgrenMessageConverter HighlevelMessageConverter;
+
+		//TODO: Refactor
 		public ServerCore(LoggerType loggerInstance, string appName, int port, string hailMessage)
 		{
+			//Create the registers for serializers and the messagehandlers for a given serializer too.
+			SerializerRegister = new SerializationManager();
+			//Register profobuf-net as it's used internally
+			SerializerRegister.Register(ProtobufNetSerializer.Instance, ProtobufNetSerializer.Instance.SerializerUniqueKey);
+
+			//Create the message converter that will hold references to 
+			HighlevelMessageConverter = new LidgrenMessageConverter();
+			HighlevelMessageConverter.Register(new HigherLevelPacketHandler(), ProtobufNetSerializer.Instance.SerializerUniqueKey);
+
+
 			ClassLogger = loggerInstance;
 			_InConnections = new Dictionary<long, Peer>();
-			_OutConnections = new Dictionary<int, ServerPeer>();
+			_OutConnections = new Dictionary<NetPeer, ServerPeer>();
 
 			PeerListeners = new List<NetPeer>();
 
@@ -160,7 +178,7 @@ namespace GladNet.Server
 			}
 			catch(Exception e)
 			{
-				this.ClassLogger.LogError("Exception: " + e.Message + "\n\n" + e.Source);
+				this.ClassLogger.LogError("Exception: " + e.Message + "\n\n" + e.Source + "\n\n" + e.Data + e.StackTrace + "\n\n\n");
 			}
 		}
 
@@ -217,18 +235,20 @@ namespace GladNet.Server
 					ListenerMessagePoll();
 
 				//if (lidgrenServerObj.ConnectionsCount > 0)
-				ClientMessagePoll();
+				MessagePoll(lidgrenServerObj);
 			}
 			this.InternalOnShutdown();
 		}
 
-		private void ClientMessagePoll()
+		private void MessagePoll(NetPeer peer)
 		{
-			NetIncomingMessage msg = lidgrenServerObj.ReadMessage();
-			HigherLevelPacket hlmsg = lidgrenServerObj.ReadHighlevelMessage();
+			NetIncomingMessage msg = peer.ReadMessage();
+			HigherLevelPacket hlmsg = peer.ReadHighlevelMessage();
 
-			if(msg != null)
-				switch(msg.MessageType)
+			//TODO: Refactor
+			if (msg != null)
+			{
+				switch (msg.MessageType)
 				{
 					case NetIncomingMessageType.ConnectionApproval:
 						if (msg.SenderConnection.RemoteHailMessage != null &&
@@ -241,6 +261,58 @@ namespace GladNet.Server
 							msg.SenderConnection.Disconnect("Hail me.");
 						break;
 				}
+
+				peer.Recycle(msg);
+			}
+
+			if (hlmsg != null)
+			{
+				ProcessHigherLevelPacket(hlmsg, InConnections[hlmsg.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier]);
+				hlmsg.Recycle();
+			}
+		}
+
+		private void ProcessHigherLevelPacket(HigherLevelPacket packet, Peer passTo)
+		{
+			if (passTo == null)
+				return;
+
+			try
+			{
+				//TODO: Refactor
+				switch ((Packet.OperationType)packet.PacketType)
+				{
+					case Packet.OperationType.Event:
+						EventPackage ePackage = GeneratePackage<EventPackage>(packet, HighlevelMessageConverter.Get(packet.SerializationMethod));
+						if(ePackage != null)
+							passTo.PackageRecieve(ePackage);
+						break;
+					case Packet.OperationType.Request:
+						RequestPackage rqPackage = GeneratePackage<RequestPackage>(packet, HighlevelMessageConverter.Get(packet.SerializationMethod));
+						if (rqPackage != null)
+							passTo.PackageRecieve(rqPackage);
+						break;
+					case Packet.OperationType.Response:
+						ResponsePackage rPackage = GeneratePackage<ResponsePackage>(packet, HighlevelMessageConverter.Get(packet.SerializationMethod));
+						if (rPackage != null)
+							passTo.PackageRecieve(rPackage);
+						break;
+				}
+			}
+			catch (NullReferenceException e)
+			{
+				this.ClassLogger.LogError(typeof(Peer).FullName + " ID: " + packet.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier + " sent packet that we failed to deserialize with method key " +
+					packet.SerializationMethod + ".");
+				throw new SerializationException(typeof(EventPackage), null, e, "Failed to deserialize for eventpackage, likely due to serializer key: " +
+					packet.SerializationMethod + " being unreigstered.");
+			}
+			
+		}
+
+		private T GeneratePackage<T>(HigherLevelPacket packet, IHandler<HigherLevelPacket, T> handler) 
+			where T : INetworkPackage
+		{
+			return handler.Handle(packet);
 		}
 
 		private void RegisterApprovedConnection(NetConnection netConnection)
@@ -253,35 +325,40 @@ namespace GladNet.Server
 			for(int i = 0; i < PeerListeners.Count; i++)
 			{
 				NetIncomingMessage msg = PeerListeners[i].ReadMessage();
+				HigherLevelPacket hlmsg = PeerListeners[i].ReadHighlevelMessage();
 
-				switch(msg.MessageType)
+				if (msg != null)
 				{
-					//We only need to handle ConnectionApproval to vefify the connection's acceptance on the remote endpoint.
-					case NetIncomingMessageType.ConnectionApproval:
-						//TODO: Call OnConnectionSuccess and create the peer and add it to PeerDictionary or how ever it's going to be handled
+					switch (msg.MessageType)
+					{
+						//We only need to handle ConnectionApproval to vefify the connection's acceptance on the remote endpoint.
+						case NetIncomingMessageType.ConnectionApproval:
+							//TODO: Call OnConnectionSuccess and create the peer and add it to PeerDictionary or how ever it's going to be handled
 
-						break;
-					case NetIncomingMessageType.StatusChanged:
-						switch((NetConnectionStatus)msg.ReadByte())
-						{
-							//The only case that needs to be handled.
-							case NetConnectionStatus.Disconnected:
-								PeerListeners.RemoveAt(i);
-								break;
-						}
-						break;
-
-					case NetIncomingMessageType.HighlevelDataPackage:
-						//TODO: Deserialize and pass the package into the Peer
-						break;
-					case NetIncomingMessageType.Data:
-						//This should be hit if we're sending a custom data package through Lidgren under the hood
-						//but at the same time this is not a highlevel package.
-						break;
+							break;
+						case NetIncomingMessageType.StatusChanged:
+							switch ((NetConnectionStatus)msg.ReadByte())
+							{
+								//The only case that needs to be handled.
+								case NetConnectionStatus.Disconnected:
+									PeerListeners.RemoveAt(i);
+									break;
+							}
+							break;
+						case NetIncomingMessageType.Data:
+							//This should be hit if we're sending a custom data package through Lidgren under the hood
+							//but at the same time this is not a highlevel package.
+							break;
+					}
+					PeerListeners[i].Recycle(msg);
 				}
-
 				//For GC reduction we can recycle the method. This is handled by Lidgren
-				PeerListeners[i].Recycle(msg);
+
+				if(hlmsg != null)
+				{
+					ProcessHigherLevelPacket(hlmsg, _OutConnections[PeerListeners[i]]);
+					hlmsg.Recycle();
+				}
 			}
 		}
 		#endregion

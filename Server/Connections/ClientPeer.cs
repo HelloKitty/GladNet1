@@ -16,5 +16,15 @@ namespace GladNet.Server.Connections.Readers
 		}
 
 		public override abstract void PackageRecieve(RequestPackage package);
+
+		public override void PackageRecieve(ResponsePackage package)
+		{
+			throw new Exception("ClientPeer recieved a ResponsePackage but Peer cannot handle this message type.");
+		}
+
+		public override void PackageRecieve(EventPackage package)
+		{
+			throw new Exception("ClientPeer recieved a EventPackage but Peer cannot handle this message type.");
+		}
 	}
 }

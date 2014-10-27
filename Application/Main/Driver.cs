@@ -5,8 +5,6 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using GladNet.Server;
-using GladNet.Server.Logging;
-using GladNet.Server.Connections;
 using AutoMapper;
 using GladNet.Common;
 
@@ -28,8 +26,8 @@ namespace GladNet.Server.App.Main
 
 			if (coreType != null)
 			{
-				AssemblyInteropObj<ServerCore<Logger>> serverObject = 
-					new AssemblyInteropObj<ServerCore<Logger>>(Activator.CreateInstance(coreType, "hi"));
+				AssemblyInteropObj<object> serverObject = 
+					new AssemblyInteropObj<object>(Activator.CreateInstance(coreType, "hi"), false);
 
 				serverObject.ExecuteMethod("InternalOnStartup");
 				serverObject.ExecuteMethod("Poll");
@@ -70,7 +68,7 @@ namespace GladNet.Server.App.Main
 				{
 					if(t.BaseType != null && t.BaseType.CustomAttributes != null)// && t.Name != typeof(ServerCore<>).Name)
 						//For some reason we can't expect the types to compare properly. Just use names
-						if(t.BaseType.CustomAttributes.Where(x => x.AttributeType.Name == typeof(CoreAttribute).Name).Count() > 0)
+						if (t.BaseType.CustomAttributes.Where(x => x.AttributeType.Name.Contains("CoreAttribute")/*x.AttributeType.Name.Contains("Core") || x.AttributeType.Name.Contains("CoreAttribute")*/).Count() > 0)
 						{
 							//Console.WriteLine("Looking at type");
 							coreType = t;

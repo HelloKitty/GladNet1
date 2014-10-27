@@ -20,6 +20,8 @@ namespace GladNet.Server.Connections
 			throw new Exception("ServerPeer base recieved a RequestPackage but ServerPeer cannot handle this message type.");
 		}
 
-		//protected abstract void PackageRecieve()
+		public override abstract void PackageRecieve(EventPackage package);
+
+		public override abstract void PackageRecieve(ResponsePackage package);
 	}
 }

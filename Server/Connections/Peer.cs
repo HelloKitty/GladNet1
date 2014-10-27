@@ -30,12 +30,16 @@ namespace GladNet.Server.Connections
 		}
 
 		public abstract void PackageRecieve(RequestPackage package);
+		public abstract void PackageRecieve(ResponsePackage package);
+		public abstract void PackageRecieve(EventPackage package);
 
 		//TODO: Implementation encryption functionality
-		internal void SendMessage(Packet.OperationType type, Packet packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+		internal Packet.SendResult SendMessage<T>(Packet.OperationType type, Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+			where T : SerializerBase
 		{
 			byte[] bytes = packet.Serialize();
-			InternalNetConnection.SendMessage(false, bytes, (byte)type, packetCode, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel, encrypt);
+			return (Packet.SendResult)InternalNetConnection.SendMessage(false, bytes, (byte)type, Serializer<T>.Instance.SerializerUniqueKey, packetCode, 
+				Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel, encrypt);
 		}
 	}
 }
