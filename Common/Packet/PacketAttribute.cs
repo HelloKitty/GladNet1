@@ -6,6 +6,7 @@ using System.Text;
 
 namespace GladNet.Common
 {
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple=false)]
 	public class PacketAttribute : Attribute
 	{
 		public readonly int UniquePacketKey;

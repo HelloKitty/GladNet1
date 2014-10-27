@@ -5,6 +5,7 @@ using GladNet.Common;
 using GladNet.Server.Connections;
 using GladNet.Server.Logging;
 using Lidgren.Network;
+using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -60,7 +61,7 @@ namespace GladNet.Server
 
 		public readonly string ExpectedClientHailMessage;
 
-		public readonly SerializationManager SerializerRegister;
+		private readonly SerializationManager SerializerRegister;
 
 		private readonly LidgrenMessageConverter HighlevelMessageConverter;
 
@@ -120,6 +121,14 @@ namespace GladNet.Server
 		protected abstract ServerPeer OnConnectionSuccess(ConnectionResponse response);
 
 		/// <summary>
+		/// Called internally when the application starts up. The implementing class should register all the custom Protobuf-net (The default serializer for the Packet base class)
+		/// packet classes so that the serializer is aware of them for both sending and recieving the packages. All internal packages that aren't written by the implementing library are handled
+		/// internally.
+		/// </summary>
+		/// <param name="registerAsDefaultFunc">The defauly packet registeration function.</param>
+		protected abstract void RegisterPackets(Func<Type, bool> registerAsDefaultFunc);
+
+		/// <summary>
 		/// Attempts to connect to another server application from this server core/application.
 		/// </summary>
 		/// <param name="endPoint"></param>
@@ -168,8 +177,10 @@ namespace GladNet.Server
 		{
 			try
 			{
-				//Gets the assembly that this is included into and tries to prepare Protobuf-net packet serializer.
-				Packet.ProcessPacketTypes(Assembly.GetAssembly(this.GetType()));
+				//Internally we should register Protobuf-net packets here.
+
+				//Add in all the custom packets the server uses.
+				RegisterPackets(Packet.Register);
 
 				lidgrenServerObj.Start();
 				OnStartup();
@@ -178,7 +189,8 @@ namespace GladNet.Server
 			}
 			catch(Exception e)
 			{
-				this.ClassLogger.LogError("Exception: " + e.Message + "\n\n" + e.Source + "\n\n" + e.Data + e.StackTrace + "\n\n\n");
+				this.ClassLogger.LogError("Exception: " + e.Message + "\n\n" + e.Source + "\n\n" + e.Data + e.StackTrace + "\n\n\n" +
+					e.InnerException.Message + e.InnerException.Source + e.InnerException.StackTrace);
 			}
 		}
 

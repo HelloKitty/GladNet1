@@ -26,5 +26,11 @@ namespace GladNet.Server.Connections.Readers
 		{
 			throw new Exception("ClientPeer recieved a EventPackage but Peer cannot handle this message type.");
 		}
+
+		public Packet.SendResult SendEvent<T>(Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+			where T : SerializerBase
+		{
+			return this.SendMessage(Packet.OperationType.Event, packet, packetCode, deliveryMethod, encrypt, channel);
+		}
 	}
 }

@@ -20,7 +20,7 @@ namespace GladNet.Common
 	{
 		private readonly object syncobj = new object();
 
-		[ProtoMember(0)]
+		[ProtoMember(1)]
 		private Dictionary<int, string> _TypeIncludeList;
 		public IEnumerable<KeyValuePair<int, string>> TypeIncludeList
 		{

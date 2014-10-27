@@ -19,6 +19,11 @@ namespace GladNet.Common
 	/// <typeparam name="SerializerType">Type of serializer desired.</typeparam>
 	public abstract class Packet<SerializerType> where SerializerType : SerializerBase
 	{
+		protected Packet()
+		{
+
+		}
+
 		public byte[] Serialize()
 		{
 			return Serializer<SerializerType>.Instance.Serialize(this);
@@ -28,11 +33,21 @@ namespace GladNet.Common
 	/// <summary>
 	/// The packet base class that uses the default serialization method for GladNet.
 	/// </summary>
-	[ProtoContract()]
-	//[ProtoInclude(1, typeof(ProtobufSyncPackage))]
+	[ProtoInclude(1, typeof(ProtobufSyncPackage))]
 	public abstract class Packet : Packet<ProtobufNetSerializer>
 	{
 		public readonly bool isMalformed;
+
+		internal static IList<int> ReferencedProtobufSubtypes = new List<int>();
+
+		/// <summary>
+		/// Protobuf-net parameterless constructor
+		/// </summary>
+		private Packet() 
+			: base()
+		{
+
+		}
 
 		public Packet(bool malformed)
 		{
@@ -108,40 +123,37 @@ namespace GladNet.Common
 		}
 
 		internal static readonly int PacketModelNumberOffset = 20;
-
-		internal static void ProcessPacketTypes(Assembly ass)
+		
+		//For the love of all that is holy DO NOT touch this unless you KNOW the torment I have experienced trying to get this to work properly
+		//It may not seem like much but it's gone through many revissions, others way more complex and were tossed out in lieu of a less cool design
+		//but more reasonable.
+		public static bool Register(Type t)
 		{
-			List<int> keyValues = new List<int>();
+			return Register(t, false);
+		}
 
-			RuntimeTypeModel model = ProtoBuf.Meta.TypeModel.Create();
+		internal static bool Register(Type t, bool isInternal)
+		{
 
-			//Parallel.ForEach(ass.GetTypes(), (t) =>
-			foreach(Type t in ass.GetTypes())
-			{
-				if (t.BaseType == typeof(Packet) && t.GetCustomAttributes(false).Where(x => x.GetType() == typeof(RegisteredPacket)).Count() == 0)
-				{
-					PacketAttribute attr = t.GetCustomAttributes(false).FirstOrDefault(x => x.GetType() == typeof(PacketAttribute)) as PacketAttribute;
+			PacketAttribute attr = t.GetCustomAttributes(false).FirstOrDefault(x => x.GetType() == typeof(PacketAttribute)) as PacketAttribute;
 
-					if (attr == null)
-						throw new Exception("Found derived type: " + t.Name + " of Packet that is not attributed by: " + typeof(PacketAttribute).Name + " all Protobut-net serializable " +
-							"packets must be targeted by this attribute for key purposes.");
+			if (attr == null)
+				throw new Exception("Found derived type: " + t.Name + " of Packet that is not attributed by: " + typeof(PacketAttribute).Name + " all Protobut-net serializable " +
+					"packets must be targeted by this attribute for key purposes.");
 
-					if (attr.UniquePacketKey <= Packet.PacketModelNumberOffset)
-						throw new Exception("Found derived type: " + t.Name + " of Packet that has a packet unique key value of " + attr.UniquePacketKey + "." +
-							" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.");
+			if (attr.UniquePacketKey <= Packet.PacketModelNumberOffset && !isInternal)
+				throw new Exception("Found derived type: " + t.Name + " of Packet that has a packet unique key value of " + attr.UniquePacketKey + "." +
+					" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.");
 
-					if (keyValues.Contains(attr.UniquePacketKey))
-						throw new Exception("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.");
-					else
-						keyValues.Add(attr.UniquePacketKey);
+			if (ReferencedProtobufSubtypes.Contains(attr.UniquePacketKey))
+				throw new Exception("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.");
+			else
+				ReferencedProtobufSubtypes.Add(attr.UniquePacketKey);
 
-					Console.WriteLine(attr.UniquePacketKey);
+			//The crown jewel.
+			RuntimeTypeModel.Default.Add(typeof(Packet), true).AddSubType(attr.UniquePacketKey, t);
 
-					//RuntimeTypeModel.Default.Add(t, true);
-					RuntimeTypeModel.Default.Add(t, true);
-					RuntimeTypeModel.Default[typeof(Packet)].AddSubType(2, t);
-				}
-			}
+			return true;
 		}
 	}
 }

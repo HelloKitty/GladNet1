@@ -28,7 +28,7 @@ namespace Common.Packet.Handlers
 
 		public bool UnRegister(byte key)
 		{
-			throw new NotImplementedException();
+			return this.HandlerCollection.Remove(key);
 		}
 
 		public HigherLevelPacketHandlerBase Get(byte key)
