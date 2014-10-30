@@ -7,7 +7,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GladNet.Server.Connections
+namespace GladNet.Server
 {
 	public abstract class Peer : IConnectionDetails
 	{
@@ -29,6 +29,12 @@ namespace GladNet.Server.Connections
 			this.InternalNetConnection = details.InternalNetConnection;
 		}
 
+		//internal implict cast to a NetConnection for a peer.
+		public static implicit operator NetConnection(Peer p)
+		{
+			return p.InternalNetConnection;
+		}
+
 		public abstract void PackageRecieve(RequestPackage package);
 		public abstract void PackageRecieve(ResponsePackage package);
 		public abstract void PackageRecieve(EventPackage package);
@@ -38,8 +44,15 @@ namespace GladNet.Server.Connections
 			where T : SerializerBase
 		{
 			byte[] bytes = packet.Serialize();
-			return (Packet.SendResult)InternalNetConnection.SendMessage(false, bytes, (byte)type, Serializer<T>.Instance.SerializerUniqueKey, packetCode, 
+			return (Packet.SendResult)InternalNetConnection.SendMessage(false, bytes, (byte)type, Serializer<T>.Instance.SerializerUniqueKey, packetCode,
 				Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel, encrypt);
+		}
+
+		//TODO: Implement broadcasting.
+		public Packet.SendResult BroadcastMessage()
+		{
+			return Packet.SendResult.Dropped;
+			//InternalNetConnection.Peer.SendMessage(false, )
 		}
 	}
 }

@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Common.Register;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace GladNet.Common
 {
-	public interface IRegisterable<RegisterType, KeyType>
+	public interface IRegisterable<RegisterType, KeyType> : IHashContainer<RegisterType, KeyType>
 	{
 		bool Register(RegisterType obj, KeyType key);
 		bool UnRegister(KeyType key);

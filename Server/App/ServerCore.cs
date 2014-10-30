@@ -37,7 +37,7 @@ namespace GladNet.Server
 		/// </summary>
 		public LoggerType ClassLogger { get; private set; }
 
-		internal IList<NetPeer> PeerListeners { get; private set; }
+		internal IList<NetClient> PeerListeners { get; private set; }
 
 		private bool isReady = false;
 
@@ -71,18 +71,18 @@ namespace GladNet.Server
 			//Create the registers for serializers and the messagehandlers for a given serializer too.
 			SerializerRegister = new SerializationManager();
 			//Register profobuf-net as it's used internally
-			SerializerRegister.Register(ProtobufNetSerializer.Instance, ProtobufNetSerializer.Instance.SerializerUniqueKey);
-
 			//Create the message converter that will hold references to 
 			HighlevelMessageConverter = new LidgrenMessageConverter();
-			HighlevelMessageConverter.Register(new HigherLevelPacketHandler(), ProtobufNetSerializer.Instance.SerializerUniqueKey);
+
+			//Register the default serializer
+			this.RegisterSerializer<ProtobufNetSerializer>();
 
 
 			ClassLogger = loggerInstance;
 			_InConnections = new Dictionary<long, Peer>();
 			_OutConnections = new Dictionary<NetPeer, ServerPeer>();
 
-			PeerListeners = new List<NetPeer>();
+			PeerListeners = new List<NetClient>();
 
 			//Set the server status as not listening
 			isListening = false;
@@ -127,6 +127,26 @@ namespace GladNet.Server
 		/// </summary>
 		/// <param name="registerAsDefaultFunc">The defauly packet registeration function.</param>
 		protected abstract void RegisterPackets(Func<Type, bool> registerAsDefaultFunc);
+
+		/// <summary>
+		/// Provides a method for users to register their own serializer with the networking. This will create a handler to handle packet serialized with the serializer
+		/// as long as the reciever also register the serializer too.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		protected bool RegisterSerializer<T>() where T : SerializerBase
+		{
+			if (SerializerRegister.HasKey(Serializer<T>.Instance.SerializerUniqueKey))
+				throw new Exception("Failed to register Serializer of Type: " + Serializer<T>.Instance.GetType().FullName + " due to a already inuse serializer key.");
+
+			//If this is successful we should create a Lidgren message converter based on this serializer
+			if (this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey))
+			{
+				return this.HighlevelMessageConverter.Register(new HigherLevelPacketHandler<T>(), Serializer<T>.Instance.SerializerUniqueKey);
+			}
+			else
+				return false;
+		}
 
 		/// <summary>
 		/// Attempts to connect to another server application from this server core/application.

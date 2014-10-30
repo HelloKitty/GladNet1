@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GladNet.Server.Connections
+namespace GladNet.Server
 {
 	public interface IConnectionDetails
 	{

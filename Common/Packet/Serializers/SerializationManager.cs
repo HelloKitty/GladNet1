@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Common.Packet.Serializers
 {
-	public class SerializationManager : IRegisterable<SerializerBase, byte>, IHashContainer<SerializerBase, byte>
+	public class SerializationManager : IRegisterable<SerializerBase, byte>
 	{
 		private Dictionary<byte, SerializerBase> RegisteredSerializers;
 

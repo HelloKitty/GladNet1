@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Common.Packet.Handlers
 {
-	internal class LidgrenMessageConverter : IRegisterable<HigherLevelPacketHandlerBase, byte>, IHashContainer<HigherLevelPacketHandlerBase, byte>
+	internal class LidgrenMessageConverter : IRegisterable<HigherLevelPacketHandlerBase, byte>
 	{
 		private Dictionary<byte, HigherLevelPacketHandlerBase> HandlerCollection;
 

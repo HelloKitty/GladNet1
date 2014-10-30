@@ -71,5 +71,10 @@ namespace GladNet.Server.Connections
 		{
 
 		}
+
+		protected override void RegisterPackets(Func<Type, bool> registerAsDefaultFunc)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
