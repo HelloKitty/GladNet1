@@ -54,5 +54,10 @@ namespace Common.Packet.Serializers
 		{
 			return this.RegisteredSerializers.ContainsKey(key);
 		}
+
+		public SerializerBase this[byte key]
+		{
+			get { return Get(key); }
+		}
 	}
 }

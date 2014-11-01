@@ -40,5 +40,10 @@ namespace Common.Packet.Handlers
 		{
 			return HandlerCollection.ContainsKey(key);
 		}
+
+		public HigherLevelPacketHandlerBase this[byte key]
+		{
+			get { return Get(key); }
+		}
 	}
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace GladNet.Server
 {
-	public class ConnectionPair<LidgrenType, PeerType> where PeerType : Peer where LidgrenType : NetConnection
+	public class ConnectionPair<LidgrenType, PeerType> where PeerType : Peer
 	{
 		public PeerType HighlevelPeer { get; private set; }
 		internal LidgrenType LidgrenPeer { get; set; }

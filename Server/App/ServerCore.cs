@@ -3,6 +3,7 @@ using Common.Packet.Handlers;
 using Common.Packet.Serializers;
 using GladNet.Common;
 using GladNet.Server.Connections;
+using GladNet.Server.Connections.Readers;
 using GladNet.Server.Logging;
 using Lidgren.Network;
 using ProtoBuf;
@@ -37,23 +38,14 @@ namespace GladNet.Server
 		/// </summary>
 		public LoggerType ClassLogger { get; private set; }
 
-		internal IList<NetClient> PeerListeners { get; private set; }
+		//internal IList<NetClient> PeerListeners { get; private set; }
+
+		internal IList<NetClient> UnconnectedListeners;
 
 		private bool isReady = false;
 
-		//These are seperated for effiency. They were originally a 2D dictionary
-
-		private Dictionary<long, Peer> _InConnections;
-		public IReadOnlyDictionary<long, Peer> InConnections 
-		{
-			get { return _InConnections; }
-		}
-
-		private Dictionary<NetPeer, ServerPeer> _OutConnections;
-		public IEnumerable<ServerPeer> OutConnections 
-		{ 
-			get { return _OutConnections.Values; }
-		}
+		public ConnectionCollection<ClientPeer, NetConnection> Clients;
+		public ConnectionCollection<ServerPeer, NetClient> ServerConnections;
 
 		public bool isListening { get; private set; }
 
@@ -73,16 +65,16 @@ namespace GladNet.Server
 			//Register profobuf-net as it's used internally
 			//Create the message converter that will hold references to 
 			HighlevelMessageConverter = new LidgrenMessageConverter();
+			UnconnectedListeners = new List<NetClient>();
 
 			//Register the default serializer
 			this.RegisterSerializer<ProtobufNetSerializer>();
 
-
 			ClassLogger = loggerInstance;
-			_InConnections = new Dictionary<long, Peer>();
-			_OutConnections = new Dictionary<NetPeer, ServerPeer>();
+			Clients = new ConnectionCollection<ClientPeer, NetConnection>();
+			ServerConnections = new ConnectionCollection<ServerPeer, NetClient>();
 
-			PeerListeners = new List<NetClient>();
+			//PeerListeners = new List<NetClient>();
 
 			//Set the server status as not listening
 			isListening = false;
@@ -169,9 +161,9 @@ namespace GladNet.Server
 				NetClient serverToServerClient = new NetClient(config);
 
 				serverToServerClient.Connect(endPoint, serverToServerClient.CreateMessage(hailMessage));
+				this.UnconnectedListeners.Add(serverToServerClient);
 
 				//The NetPeer should be added to a collection so we can service messages from the connected servers.
-				PeerListeners.Add(serverToServerClient);
 				
 				return true;
 			}
@@ -299,7 +291,7 @@ namespace GladNet.Server
 
 			if (hlmsg != null)
 			{
-				ProcessHigherLevelPacket(hlmsg, InConnections[hlmsg.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier]);
+				ProcessHigherLevelPacket(hlmsg, Clients[hlmsg.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier]);
 				hlmsg.Recycle();
 			}
 		}
@@ -354,10 +346,23 @@ namespace GladNet.Server
 
 		private void ListenerMessagePoll()
 		{
-			for(int i = 0; i < PeerListeners.Count; i++)
+			foreach(NetClient nc in UnconnectedListeners)
 			{
-				NetIncomingMessage msg = PeerListeners[i].ReadMessage();
-				HigherLevelPacket hlmsg = PeerListeners[i].ReadHighlevelMessage();
+				if(PollSpecificListener(nc, null) == NetConnectionStatus.Connected)
+					this.OnConnectionSuccess(new ConnectionResponse(nc.Configuration.))
+			}
+
+			foreach(var nc in ServerConnections)
+			{
+				if (PollSpecificListener(nc.LidgrenPeer, nc.HighlevelPeer) == NetConnectionStatus.Disconnected)
+					ServerConnections.UnRegister(nc.LidgrenPeer.UniqueIdentifier);
+			}
+		}
+
+		private NetConnectionStatus PollSpecificListener(NetClient nc, Peer p)
+		{
+			NetIncomingMessage msg = nc.ReadMessage();
+			HigherLevelPacket hlmsg = nc.ReadHighlevelMessage();
 
 				if (msg != null)
 				{
@@ -366,15 +371,13 @@ namespace GladNet.Server
 						//We only need to handle ConnectionApproval to vefify the connection's acceptance on the remote endpoint.
 						case NetIncomingMessageType.ConnectionApproval:
 							//TODO: Call OnConnectionSuccess and create the peer and add it to PeerDictionary or how ever it's going to be handled
-
-							break;
+							return NetConnectionStatus.Connected;
 						case NetIncomingMessageType.StatusChanged:
 							switch ((NetConnectionStatus)msg.ReadByte())
 							{
 								//The only case that needs to be handled.
 								case NetConnectionStatus.Disconnected:
-									PeerListeners.RemoveAt(i);
-									break;
+									return NetConnectionStatus.Disconnected;
 							}
 							break;
 						case NetIncomingMessageType.Data:
@@ -382,16 +385,17 @@ namespace GladNet.Server
 							//but at the same time this is not a highlevel package.
 							break;
 					}
-					PeerListeners[i].Recycle(msg);
+					nc.Recycle(msg);
 				}
 				//For GC reduction we can recycle the method. This is handled by Lidgren
 
-				if(hlmsg != null)
+				if(hlmsg != null && p != null)
 				{
-					ProcessHigherLevelPacket(hlmsg, _OutConnections[PeerListeners[i]]);
+					ProcessHigherLevelPacket(hlmsg, p);
 					hlmsg.Recycle();
 				}
-			}
+
+				return NetConnectionStatus.None;
 		}
 		#endregion
 	}

@@ -8,6 +8,7 @@ namespace GladNet.Common
 {
 	public interface IRegisterable<RegisterType, KeyType> : IHashContainer<RegisterType, KeyType>
 	{
+		RegisterType this[KeyType key] { get; }
 		bool Register(RegisterType obj, KeyType key);
 		bool UnRegister(KeyType key);
 	}
