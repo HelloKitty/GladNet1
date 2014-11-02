@@ -14,11 +14,14 @@ namespace GladNet.Server.Connections
 		public long UniqueConnectionId { get; private set; }
 		public NetConnection InternalNetConnection { get; private set; }
 
-		public ConnectionRequest(IPEndPoint point, long uid, NetConnection connection)
+		public byte ConnectionTypeIndicator { get; private set; }
+
+		public ConnectionRequest(IPEndPoint point, long uid, NetConnection connection, byte connectionType)
 		{
 			this.RemoteConnectionEndpoint = point;
 			this.UniqueConnectionId = uid;
 			this.InternalNetConnection = connection;
+			ConnectionTypeIndicator = connectionType;
 		}
 	}
 }

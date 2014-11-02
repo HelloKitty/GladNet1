@@ -33,7 +33,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;DEBUGBUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="App\Logging\ILoggable.cs" />
     <Compile Include="App\Logging\Logger.cs" />
+    <Compile Include="App\Logging\Loggers\AsyncConsoleLogger.cs" />
     <Compile Include="App\ServerCore.cs" />
     <Compile Include="Connections\Connection Components\ConnectionCollection.cs" />
     <Compile Include="Connections\Connection Components\ConnectionPair.cs" />
@@ -83,7 +84,6 @@
     <Compile Include="Connections\Connection Components\ConnectionResponse.cs" />
     <Compile Include="Connections\Peer.cs" />
     <Compile Include="Connections\ClientPeer.cs" />
-    <Compile Include="Connections\Readers\IListener.cs" />
     <Compile Include="Connections\Readers\IPollable.cs" />
     <Compile Include="Connections\ServerPeer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

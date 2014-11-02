@@ -13,6 +13,7 @@ namespace GladNet.Common
 
 	}
 
+	//TODO: Refactor. So much code duplication
 	internal class HigherLevelPacketHandler<SerializerType> : HigherLevelPacketHandlerBase where SerializerType : SerializerBase
 	{
 		protected override EventPackage HandleEventPackage(HigherLevelPacket obj)

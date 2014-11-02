@@ -14,11 +14,17 @@ namespace GladNet.Server.Connections
 		public long UniqueConnectionId { get; private set; }
 		public NetConnection InternalNetConnection { get; private set; }
 
-		public ConnectionResponse(IPEndPoint point, long uid, NetConnection connection)
+		public readonly string HailUsed;
+
+		internal readonly bool Result;
+
+		public ConnectionResponse(IPEndPoint point, long uid, NetConnection connection, bool result, string hail)//, byte connectionType)
 		{
 			this.RemoteConnectionEndpoint = point;
 			this.UniqueConnectionId = uid;
 			this.InternalNetConnection = connection;
+			Result = result;
+			HailUsed = hail;
 		}
 	}
 }

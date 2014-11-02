@@ -30,12 +30,14 @@ namespace GladNet.Common
 		}
 	}
 
+	[ProtoContract]
 	/// <summary>
 	/// The packet base class that uses the default serialization method for GladNet.
 	/// </summary>
-	[ProtoInclude(1, typeof(ProtobufSyncPackage))]
 	public abstract class Packet : Packet<ProtobufNetSerializer>
 	{
+		public static EmptyPacket Empty = new EmptyPacket();
+
 		public readonly bool isMalformed;
 
 		internal static IList<int> ReferencedProtobufSubtypes = new List<int>();
@@ -56,9 +58,9 @@ namespace GladNet.Common
 
 		internal enum OperationType : byte
 		{
-			Event,
-			Request,
-			Response
+			Event = 0,
+			Request = 1,
+			Response = 2
 		}
 
 		public enum DeliveryMethod
@@ -132,9 +134,13 @@ namespace GladNet.Common
 			return Register(t, false);
 		}
 
+		internal static void LockInProtobufnet()
+		{
+			RuntimeTypeModel.Default.CompileInPlace();
+		}
+
 		internal static bool Register(Type t, bool isInternal)
 		{
-
 			PacketAttribute attr = t.GetCustomAttributes(false).FirstOrDefault(x => x.GetType() == typeof(PacketAttribute)) as PacketAttribute;
 
 			if (attr == null)
@@ -151,7 +157,7 @@ namespace GladNet.Common
 				ReferencedProtobufSubtypes.Add(attr.UniquePacketKey);
 
 			//The crown jewel.
-			RuntimeTypeModel.Default.Add(typeof(Packet), true).AddSubType(attr.UniquePacketKey, t);
+			RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);			
 
 			return true;
 		}

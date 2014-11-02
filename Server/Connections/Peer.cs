@@ -17,8 +17,11 @@ namespace GladNet.Server
 		public NetConnection InternalNetConnection { get; private set; }
 		#endregion
 
+		public bool isConnected { get; private set; }
+
 		public Peer(IConnectionDetails details)
 		{
+			isConnected = true;
 			MemberwiseConnectionDetailsCopyToClass(details);
 		}
 
@@ -38,6 +41,14 @@ namespace GladNet.Server
 		public abstract void PackageRecieve(RequestPackage package);
 		public abstract void PackageRecieve(ResponsePackage package);
 		public abstract void PackageRecieve(EventPackage package);
+
+
+		internal void InternalOnDisconnection()
+		{
+			isConnected = false;
+			OnDisconnection();
+		}
+		public abstract void OnDisconnection();
 
 		//TODO: Implementation encryption functionality
 		internal Packet.SendResult SendMessage<T>(Packet.OperationType type, Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)

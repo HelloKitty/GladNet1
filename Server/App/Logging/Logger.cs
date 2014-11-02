@@ -12,9 +12,9 @@ namespace GladNet.Server.Logging
 		public enum State
 		{
 			Disabled = 0,
-			Debug = 2,
-			Warn = 4 | Debug,
-			Error = 8 | Warn
+			Error = 2,
+			Warn = 4 | Error,
+			Debug = 8 | Warn
 		}
 
 		/// <summary>
