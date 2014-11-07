@@ -59,13 +59,6 @@ namespace GladNet.Server
 				Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel, encrypt);
 		}
 
-		/*
-		internal void BroadcastMessage<T>(Packet.OperationType type, Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
-			where T : SerializerBase
-		{
-			BroadcastMessage(type, (List<NetConnection>)this.Peers, packet, packetCode, deliveryMethod, encrypt, channel);
-		}*/
-
 		//TODO: One day we will need to optimize the ability to broadcast messages as we'll have to convert to a NetConnection list at some point when it's being called externally through
 		//the exposed API of GladNet.
 		public void BroadcastEvent<T>(IList<Peer> connections, Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)

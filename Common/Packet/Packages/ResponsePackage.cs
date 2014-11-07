@@ -5,19 +5,24 @@ using System.Text;
 
 namespace GladNet.Common
 {
-	public class ResponsePackage : INetworkPackage
+	public class ResponsePackage : NetworkPackage
 	{
-		public bool wasEncrypted { get; private set; }
+		/*public bool wasEncrypted { get; private set; }
 
 		public byte Code { get; private set; }
 
-		public Packet PacketObject { get; private set; }
+		public Packet<SerializerType> PacketObject { get; private set; }
 
-		public ResponsePackage(Packet packet, byte code, bool encrypted)
+		public ResponsePackage(Packet<SerializerType> packet, byte code, bool encrypted)
 		{
 			PacketObject = packet;
 			Code = code;
 			wasEncrypted = encrypted;
-		}
+		}*/
 	}
+
+	/*public class ResponsePackage : ResponsePackage<ProtobufNetSerializer>
+	{
+
+	}*/
 }

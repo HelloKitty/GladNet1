@@ -8,7 +8,7 @@ using System.Text;
 
 namespace GladNet.Common
 {
-	public sealed class ProtobufNetSerializer : Serializer<ProtobufNetSerializer>
+	public sealed class ProtobufNetSerializer : SerializerBase
 	{
 		public override byte[] Serialize<DataType>(DataType obj)
 		{

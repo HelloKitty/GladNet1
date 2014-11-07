@@ -52,12 +52,14 @@
   <ItemGroup>
     <Compile Include="Exceptions\SerializationException.cs" />
     <Compile Include="Packet\Handlers\Handler.cs" />
-    <Compile Include="Packet\Handlers\HigherLevelPacketHandler.cs" />
-    <Compile Include="Packet\Handlers\LidgrenMessageConverter.cs" />
+    <Compile Include="Packet\Handlers\Packet\PacketConverter.cs" />
+    <Compile Include="Packet\Handlers\Packet\LidgrenMessageConverter.cs" />
+    <Compile Include="Packet\Handlers\Packet\PacketHandler.cs" />
+    <Compile Include="Packet\LidgrenTransferPacket.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
     <Compile Include="Packet\Packages\ResponsePackage.cs" />
     <Compile Include="Packet\Packages\EventPackage.cs" />
-    <Compile Include="Packet\Packages\INetworkPackage.cs" />
+    <Compile Include="Packet\Packages\NetworkPackage.cs" />
     <Compile Include="Packet\Packet Types\EmptyPacket.cs" />
     <Compile Include="Packet\Packet Types\ProtobufSyncPackage.cs" />
     <Compile Include="Packet\Packet.cs" />

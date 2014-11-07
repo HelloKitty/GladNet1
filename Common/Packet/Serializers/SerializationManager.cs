@@ -47,7 +47,7 @@ namespace Common.Packet.Serializers
 			if (RegisteredSerializers.ContainsKey(key))
 				return RegisteredSerializers[key];
 			else
-				return RegisteredSerializers[ProtobufNetSerializer.Instance.SerializerUniqueKey];
+				return RegisteredSerializers[Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey];
 		}
 
 		public bool HasKey(byte key)

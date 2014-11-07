@@ -28,7 +28,6 @@ namespace GladNet.Common
 		}
 
 		public ProtobufSyncPackage(int includeSize) 
-			: base(false)
 		{
 			_TypeIncludeList = new Dictionary<int, string>(includeSize);
 		}
@@ -37,7 +36,6 @@ namespace GladNet.Common
 		/// Protobuf-net constructor
 		/// </summary>
 		protected ProtobufSyncPackage()
-			: base(false)
 		{
 
 		}

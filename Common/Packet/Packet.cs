@@ -16,17 +16,18 @@ namespace GladNet.Common
 	/// (Not fully supported yet) This class provides functionality to apply custom serializers and deserializers to classes.
 	/// As long as a serializer follows the contract laid out by Serializer class then the serializer can be used and defined on a per package basis.
 	/// </summary>
-	/// <typeparam name="SerializerType">Type of serializer desired.</typeparam>
-	public abstract class Packet<SerializerType> where SerializerType : SerializerBase
+	public abstract class PacketBase
 	{
-		protected Packet()
+		protected abstract SerializerBase PacketSerializer { get; }
+
+		protected PacketBase()
 		{
 
 		}
 
 		public byte[] Serialize()
 		{
-			return Serializer<SerializerType>.Instance.Serialize(this);
+			return PacketSerializer.Serialize(this);
 		}
 	}
 
@@ -34,26 +35,24 @@ namespace GladNet.Common
 	/// <summary>
 	/// The packet base class that uses the default serialization method for GladNet.
 	/// </summary>
-	public abstract class Packet : Packet<ProtobufNetSerializer>
+	public abstract class Packet : PacketBase
 	{
 		public static EmptyPacket Empty = new EmptyPacket();
 
-		public readonly bool isMalformed;
+		protected override SerializerBase PacketSerializer
+		{
+			get { return Serializer<ProtobufNetSerializer>.Instance; }
+		}
 
 		internal static IList<int> ReferencedProtobufSubtypes = new List<int>();
 
 		/// <summary>
 		/// Protobuf-net parameterless constructor
 		/// </summary>
-		private Packet() 
+		protected Packet() 
 			: base()
 		{
 
-		}
-
-		public Packet(bool malformed)
-		{
-			this.isMalformed = malformed;
 		}
 
 		internal enum OperationType : byte

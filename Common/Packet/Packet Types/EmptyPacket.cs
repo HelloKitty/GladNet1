@@ -10,17 +10,19 @@ namespace GladNet.Common
 	[ProtoContract]
 	public class EmptyPacket : Packet
 	{
-
-		public EmptyPacket(bool malformed) 
-			: base(malformed)
+		public EmptyPacket()
 		{
 
 		}
+	}
 
-		public EmptyPacket()
-			: base(false)
+	public class MalformedPacket : Packet
+	{
+		public bool isMalformed { get; private set; }
+
+		public MalformedPacket()
 		{
-
+			isMalformed = true;
 		}
 	}
 }
