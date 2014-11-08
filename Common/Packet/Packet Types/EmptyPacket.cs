@@ -6,11 +6,12 @@ using System.Text;
 
 namespace GladNet.Common
 {
-	[PacketAttribute(1)]
+	[PacketAttribute(2)]
 	[ProtoContract]
 	public class EmptyPacket : Packet
 	{
 		public EmptyPacket()
+			: base()
 		{
 
 		}

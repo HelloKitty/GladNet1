@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace GladNet.Common
 {
+	[ProtoContract]
 	/// <summary>
 	/// (Not fully supported yet) This class provides functionality to apply custom serializers and deserializers to classes.
 	/// As long as a serializer follows the contract laid out by Serializer class then the serializer can be used and defined on a per package basis.
@@ -20,7 +21,8 @@ namespace GladNet.Common
 	{
 		protected abstract SerializerBase PacketSerializer { get; }
 
-		protected PacketBase()
+		//Make this public to anticipate Webplayer use
+		public PacketBase()
 		{
 
 		}
@@ -28,6 +30,11 @@ namespace GladNet.Common
 		public byte[] Serialize()
 		{
 			return PacketSerializer.Serialize(this);
+		}
+
+		public byte SerializerKey
+		{
+			get { return this.PacketSerializer.SerializerUniqueKey; }
 		}
 	}
 
@@ -46,10 +53,11 @@ namespace GladNet.Common
 
 		internal static IList<int> ReferencedProtobufSubtypes = new List<int>();
 
+		//Make this public to anticipate Webplayer use
 		/// <summary>
 		/// Protobuf-net parameterless constructor
 		/// </summary>
-		protected Packet() 
+		public Packet()
 			: base()
 		{
 
@@ -95,7 +103,7 @@ namespace GladNet.Common
 					return DeliveryMethod.UnreliableDiscardStale;
 
 				default:
-					throw new Exception("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.");
+					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, Logger.LogType.Error);
 			}
 		}
 
@@ -117,9 +125,8 @@ namespace GladNet.Common
 					
 				case DeliveryMethod.UnreliableDiscardStale:
 					return NetDeliveryMethod.UnreliableSequenced;
-
 				default:
-					throw new Exception("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.");
+					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, Logger.LogType.Error);
 			}
 		}
 
@@ -135,6 +142,8 @@ namespace GladNet.Common
 
 		internal static void LockInProtobufnet()
 		{
+			//This will let the serializer know of the base packet types via PacketBase
+			RuntimeTypeModel.Default.Add(typeof(PacketBase), false).AddSubType(1, typeof(Packet));
 			RuntimeTypeModel.Default.CompileInPlace();
 		}
 
@@ -143,20 +152,21 @@ namespace GladNet.Common
 			PacketAttribute attr = t.GetCustomAttributes(false).FirstOrDefault(x => x.GetType() == typeof(PacketAttribute)) as PacketAttribute;
 
 			if (attr == null)
-				throw new Exception("Found derived type: " + t.Name + " of Packet that is not attributed by: " + typeof(PacketAttribute).Name + " all Protobut-net serializable " +
-					"packets must be targeted by this attribute for key purposes.");
+				throw new LoggableException("Found derived type: " + t.Name + " of Packet that is not attributed by: " + typeof(PacketAttribute).Name + " all Protobut-net serializable " +
+					"packets must be targeted by this attribute for key purposes.", null, Logger.LogType.Error);
 
 			if (attr.UniquePacketKey <= Packet.PacketModelNumberOffset && !isInternal)
-				throw new Exception("Found derived type: " + t.Name + " of Packet that has a packet unique key value of " + attr.UniquePacketKey + "." +
-					" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.");
+				throw new LoggableException("Found derived type: " + t.Name + " of Packet that has a packet unique key value of " + attr.UniquePacketKey + "." +
+					" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.", null, Logger.LogType.Error);
 
 			if (ReferencedProtobufSubtypes.Contains(attr.UniquePacketKey))
-				throw new Exception("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.");
+				throw new LoggableException("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.", 
+					null, Logger.LogType.Error);
 			else
 				ReferencedProtobufSubtypes.Add(attr.UniquePacketKey);
 
 			//The crown jewel.
-			RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);			
+			RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);
 
 			return true;
 		}

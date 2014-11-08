@@ -3,6 +3,7 @@ using GladNet.Common;
 using Lidgren.Network;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,13 +17,13 @@ namespace GladNet.Server
 		private readonly List<PeerType> RegisteredPeers;
 		private readonly List<LidgrenType> RegisteredNetConnections;
 
-		private readonly IDictionary<long, ConnectionPair<LidgrenType, PeerType>> InternalPeerTable;
+		private readonly ConcurrentDictionary<long, ConnectionPair<LidgrenType, PeerType>> InternalPeerTable;
 
 		internal ConnectionCollection()
 		{
 			this.RegisteredNetConnections = new List<LidgrenType>();
 			this.RegisteredPeers = new List<PeerType>();
-			InternalPeerTable = new Dictionary<long, ConnectionPair<LidgrenType, PeerType>>();
+			InternalPeerTable = new ConcurrentDictionary<long, ConnectionPair<LidgrenType, PeerType>>();
 		}
 
 		//Hacky workaround for not being able to implement IEnumerable<T> for both PeerType and NetConnection.
@@ -36,7 +37,7 @@ namespace GladNet.Server
 			return cc.RegisteredNetConnections;
 		}
 
-		public ConnectionPair<LidgrenType, PeerType> Get(long key)
+		public ConnectionPair<LidgrenType, PeerType> GetValue(long key)
 		{
 			return this.InternalPeerTable[key];
 		}
@@ -73,13 +74,15 @@ namespace GladNet.Server
 			if(!HasKey(key))
 				return false;
 
+			ConnectionPair<LidgrenType, PeerType> TempPair;
+
 			return this.RegisteredPeers.Remove(InternalPeerTable[key].HighlevelPeer) && this.RegisteredNetConnections.Remove(InternalPeerTable[key].LidgrenPeer)
-				&& InternalPeerTable.Remove(key);
+				&& InternalPeerTable.TryRemove(key, out TempPair);
 		}
 
 		public ConnectionPair<LidgrenType, PeerType> this[long key]
 		{
-			get { return Get(key); }
+			get { return GetValue(key); }
 		}
 
 		public IEnumerator<ConnectionPair<LidgrenType, PeerType>> GetEnumerator()

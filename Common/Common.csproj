@@ -50,11 +50,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\LoggableException.cs" />
     <Compile Include="Exceptions\SerializationException.cs" />
+    <Compile Include="Logging\ILoggable.cs" />
+    <Compile Include="Logging\Logger.cs" />
     <Compile Include="Packet\Handlers\Handler.cs" />
     <Compile Include="Packet\Handlers\Packet\PacketConverter.cs" />
     <Compile Include="Packet\Handlers\Packet\LidgrenMessageConverter.cs" />
-    <Compile Include="Packet\Handlers\Packet\PacketHandler.cs" />
     <Compile Include="Packet\LidgrenTransferPacket.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
     <Compile Include="Packet\Packages\ResponsePackage.cs" />

@@ -32,7 +32,10 @@ namespace GladNet.Common
 			try
 			{
 				using (MemoryStream ms = new MemoryStream(bytes))
+				{
+					ms.Position = 0;
 					return Serializer.Deserialize<DataType>(ms);
+				}
 			}
 			catch (Exception e)
 			{

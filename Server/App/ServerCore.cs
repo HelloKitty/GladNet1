@@ -39,7 +39,7 @@ namespace GladNet.Server
 		/// </summary>
 		public LoggerType ClassLogger { get; private set; }
 
-		private ConcurrentQueue<ConnectionResponse> UnhandledServerConnections;
+		private IList<ConnectionResponse> UnhandledServerConnections;
 
 		private bool isReady = false;
 
@@ -54,7 +54,9 @@ namespace GladNet.Server
 
 		private readonly SerializationManager SerializerRegister;
 
-		private readonly LidgrenMessageConverter HighlevelMessageConverter;
+		private readonly PacketConverter Converter;
+
+		//private readonly LidgrenMessageConverter HighlevelMessageConverter;
 		
 		/// <summary>
 		/// Indicates the type of server. This is to distinguish between incoming and outgoing connections in server to server scenarios.
@@ -69,8 +71,9 @@ namespace GladNet.Server
 			SerializerRegister = new SerializationManager();
 			//Register profobuf-net as it's used internally
 			//Create the message converter that will hold references to 
-			HighlevelMessageConverter = new LidgrenMessageConverter();
-			UnhandledServerConnections = new ConcurrentQueue<ConnectionResponse>();
+			//HighlevelMessageConverter = new LidgrenMessageConverter();
+			Converter = new PacketConverter();
+			UnhandledServerConnections = new List<ConnectionResponse>();
 
 			//Register the default serializer
 			this.RegisterSerializer<ProtobufNetSerializer>();
@@ -136,13 +139,7 @@ namespace GladNet.Server
 			if (SerializerRegister.HasKey(Serializer<T>.Instance.SerializerUniqueKey))
 				throw new Exception("Failed to register Serializer of Type: " + Serializer<T>.Instance.GetType().FullName + " due to a already inuse serializer key.");
 
-			//If this is successful we should create a Lidgren message converter based on this serializer
-			if (this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey))
-			{
-				return this.HighlevelMessageConverter.Register(new HigherLevelPacketHandler<T>(), Serializer<T>.Instance.SerializerUniqueKey);
-			}
-			else
-				return false;
+			return this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey);
 		}
 
 		/// <summary>
@@ -162,22 +159,17 @@ namespace GladNet.Server
 				msg.Write(hailMessage);
 				msg.Write(ServerTypeUniqueByte);
 
-				//Create a task that waits n seconds and then if connection was succesful it queues up a response to be serviced
-				Task.Factory.StartNew(() =>
-					{
-						var nc = TryConnect(lidgrenServerObj, endPoint, msg).Result;
-						bool result = nc.Status != NetConnectionStatus.Connected;
-						this.UnhandledServerConnections.Enqueue(new ConnectionResponse(endPoint, nc.RemoteUniqueIdentifier, nc, result, hailMessage));
-					});
+#if DEBUGBUILD
+				AsyncConsoleLogger.Instance.LogDebug("Attempting to connect to another server.");
+#endif
+				NetConnection possibleConnection = lidgrenServerObj.Connect(endPoint, msg);
+
+				ConnectionResponse response = new ConnectionResponse(endPoint, possibleConnection.RemoteUniqueIdentifier,
+					possibleConnection, hailMessage);
+
+				this.UnhandledServerConnections.Add(response);
 				return true;
 			}
-		}
-
-		private async Task<NetConnection> TryConnect(NetPeer peer, IPEndPoint ep, NetOutgoingMessage hailMessage)
-		{
-			NetConnection nc = peer.Connect(ep, hailMessage);
-			await Task.Delay(3000);
-			return nc;
 		}
 
 		/// <summary>
@@ -201,6 +193,7 @@ namespace GladNet.Server
 			try
 			{
 				//Internally we should register Protobuf-net packets here.
+				
 				Packet.Register(typeof(EmptyPacket), true);
 
 				//Add in all the custom packets the server uses.
@@ -243,32 +236,20 @@ namespace GladNet.Server
 		/// <summary>
 		/// This method should be called and serviced on the main thread or for Unity3D in a coroutine.
 		/// </summary>
-		public void Poll()//float inMillisecondsWait = 0.0f)
+		public void Poll()
 		{
 			while(isReady)
 			{
 				MessagePoll(lidgrenServerObj);
-
-				//Service all unhandled connection responses from connection attempts
-				if(!UnhandledServerConnections.IsEmpty)
-				{
-					ConnectionResponse cr;
-					if (UnhandledServerConnections.TryDequeue(out cr))
-					{
-						if (cr.Result)
-							this.OnConnectionSuccess(cr);
-						else
-							this.OnConnectionFailure(cr);
-					}
-				}
 			}
+
 			this.InternalOnShutdown();
 		}
 
 		private void MessagePoll(NetPeer peer)
 		{
 			NetIncomingMessage msg = peer.ReadMessage();
-			HigherLevelPacket hlmsg = peer.ReadHighlevelMessage();
+			HighLevelMessage hlmsg = peer.ReadHighlevelMessage();
 
 			//TODO: Refactor
 			if (msg != null && msg.SenderConnection != null)
@@ -300,13 +281,19 @@ namespace GladNet.Server
 						//Malicious user could try to send a fake StatusChange without the extra byte so try to catch NetException.
 						try
 						{
-							if(Clients.HasKey(msg.SenderConnection.RemoteUniqueIdentifier))
+							if (Clients.HasKey(msg.SenderConnection.RemoteUniqueIdentifier))
 								this.ReadStatusChange((NetConnectionStatus)msg.ReadByte(), Clients[msg.SenderConnection.RemoteUniqueIdentifier]);
+							else if (ServerConnections.HasKey(msg.SenderConnection.RemoteUniqueIdentifier))
+								this.ReadStatusChange((NetConnectionStatus)msg.ReadByte(), ServerConnections[msg.SenderConnection.RemoteUniqueIdentifier]);
+
+							//If this point is reached it indicates that the status change is not from a registered connection and
+							//this could indicate potentially a subserver connecting or maybe a client message before hail approval.
+							ReadStatusChange((NetConnectionStatus)msg.ReadByte(), msg.SenderConnection);
 						}
 						catch(NetException e)
 						{
 #if DEBUGBUILD
-							ClassLogger.LogError("NetConnection ID: " + msg.SenderConnection.RemoteUniqueIdentifier + " send a potentially malicious StatusChange update.");
+							ClassLogger.LogError("NetConnection ID: " + msg.SenderConnection.RemoteUniqueIdentifier + " sent a potentially malicious StatusChange update.");
 #endif
 						}
 						break;
@@ -315,18 +302,79 @@ namespace GladNet.Server
 				peer.Recycle(msg);
 			}
 
-			if (hlmsg != null && hlmsg.LowLevelMessage.SenderConnection != null)
+			if (hlmsg != null && hlmsg.OriginalLidgrenMessage.SenderConnection != null)
 			{
 
 #if DEBUGBUILD
-				ClassLogger.LogDebug("Recieved a high level message from client ID: " + hlmsg.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier);
+				ClassLogger.LogDebug("Recieved a high level message from client ID: " + hlmsg.OriginalLidgrenMessage.SenderConnection.RemoteUniqueIdentifier);
 #endif
-				if (Clients.HasKey(hlmsg.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier))
+				try
 				{
-					ClassLogger.LogDebug("About to call Processing");
-					ProcessHigherLevelPacket(hlmsg, Clients[hlmsg.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier]);
+					if (Clients.HasKey(hlmsg.OriginalLidgrenMessage.SenderConnection.RemoteUniqueIdentifier))
+					{
+						ClassLogger.LogDebug("About to call Processing");
+						try
+						{
+							LidgrenTransferPacket transferPacket = Serializer<ProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(hlmsg.PacketBytes);
+
+							if(Clients.HasKey(hlmsg.OriginalLidgrenMessage.SenderConnection.RemoteUniqueIdentifier))
+								ProcessHigherLevelPacket(transferPacket, Clients[hlmsg.OriginalLidgrenMessage.SenderConnection.RemoteUniqueIdentifier]);
+							//If it's not a client's high level message it might be a server's. We shouldn't disconnect a connection if it's neither
+							//Because a maliciously crafted package could be made to impersonate a current client (although examination of Lidgren
+							//internals would be required to know for sure.
+							else if(ServerConnections.HasKey(hlmsg.OriginalLidgrenMessage.SenderConnection.RemoteUniqueIdentifier))
+							{
+								ProcessHigherLevelPacket(transferPacket, ServerConnections[hlmsg.OriginalLidgrenMessage.SenderConnection.RemoteUniqueIdentifier]);
+							}
+						}
+						catch (Exception e)
+						{
+							//TODO: Implement better exception handling
+							throw new LoggableException("Failed to forward HighLevelMessage to a peer.", e, Logger.LogType.Error);
+						}
+					}
 				}
-				hlmsg.Recycle();
+				catch(LoggableException e)
+				{
+					ClassLogger.LogError(e.Message);
+				}
+
+				hlmsg.OriginalLidgrenMessage.SenderConnection.Peer.Recycle(hlmsg.OriginalLidgrenMessage);
+			}
+		}
+
+		private void ReadStatusChange(NetConnectionStatus netConnectionStatus, NetConnection netConnection)
+		{
+#if DEBUGBUILD
+			this.ClassLogger.LogDebug("Entered into un-collected connection status handler.");
+#endif
+
+
+			ConnectionResponse cr = this.UnhandledServerConnections
+				.FirstOrDefault(x => x.InternalNetConnection.RemoteUniqueIdentifier == netConnection.RemoteUniqueIdentifier);
+			switch(netConnectionStatus)
+			{
+				case NetConnectionStatus.Disconnected:
+					//If we get a disconnection and it's about an unhandled server that has yet to fully connect we should remove it.
+					if(cr == null)
+						return;
+
+					UnhandledServerConnections.Remove(cr);
+					this.OnConnectionFailure(cr);
+					break;
+				case NetConnectionStatus.Connected:
+					if(cr == null)
+						return;
+
+					UnhandledServerConnections.Remove(cr);
+					ServerPeer newPeer = this.OnConnectionSuccess(cr);
+
+					//If this is not null it means the application created a new serverpeer and it needs to be added
+					//To the collection to allow for message forwarding and such.
+					if (newPeer != null)
+						ServerConnections.Register(new ConnectionPair<NetConnection, ServerPeer>(netConnection, newPeer),
+							netConnection.RemoteUniqueIdentifier);
+					break;
 			}
 		}
 
@@ -358,27 +406,30 @@ namespace GladNet.Server
 			}
 		}
 
-		private void ProcessHigherLevelPacket(HigherLevelPacket packet, Peer passTo)
+		private void ProcessHigherLevelPacket(LidgrenTransferPacket packet, Peer passTo)
 		{
 			if (passTo == null)
 				return;
 
-			ClassLogger.LogDebug("Handling higherlevel packet. OperationType: " + ((Packet.OperationType)packet.PacketType).ToString() + " Serialization ID: " + packet.SerializationMethod);
+#if DEBUGBUILD
+			ClassLogger.LogDebug("Handling higherlevel packet. OperationType: " + ((Packet.OperationType)packet.OperationType).ToString() + " Serialization ID: " 
+				+ packet.SerializerKey);
+#endif
 
 			try
 			{
-				if (HighlevelMessageConverter.HasKey(packet.SerializationMethod))
+				if (SerializerRegister.HasKey(packet.SerializerKey))
 					//TODO: Refactor
-					switch ((Packet.OperationType)packet.PacketType)
+					switch ((Packet.OperationType)packet.OperationType)
 					{
 						case Packet.OperationType.Event:
-							EventPackage ePackage = GeneratePackage<EventPackage>(packet, HighlevelMessageConverter.Get(packet.SerializationMethod));
+							EventPackage ePackage = GeneratePackage<EventPackage>(packet, packet.SerializerKey);
 							if (ePackage != null)
 								passTo.PackageRecieve(ePackage);
 							break;
 						case Packet.OperationType.Request:
 							ClassLogger.LogDebug("Hit request");
-							RequestPackage rqPackage = GeneratePackage<RequestPackage>(packet, HighlevelMessageConverter.Get(packet.SerializationMethod));
+							RequestPackage rqPackage = GeneratePackage<RequestPackage>(packet, packet.SerializerKey);
 							if (rqPackage != null)
 							{
 								ClassLogger.LogDebug("About to call peer method");
@@ -386,29 +437,33 @@ namespace GladNet.Server
 							}
 							break;
 						case Packet.OperationType.Response:
-							ResponsePackage rPackage = GeneratePackage<ResponsePackage>(packet, HighlevelMessageConverter.Get(packet.SerializationMethod));
+							ResponsePackage rPackage = GeneratePackage<ResponsePackage>(packet, packet.SerializerKey);
 							if (rPackage != null)
 								passTo.PackageRecieve(rPackage);
 							break;
 					}
 				else
-					ClassLogger.LogError("Recieved a packet that cannot be handled due to not having a serializer registered with byte code: " + packet.SerializationMethod);
+					ClassLogger.LogError("Recieved a packet that cannot be handled due to not having a serializer registered with byte code: " + packet.SerializerKey);
 			}
 			catch (NullReferenceException e)
 			{
-				this.ClassLogger.LogError(typeof(Peer).FullName + " ID: " + packet.LowLevelMessage.SenderConnection.RemoteUniqueIdentifier + " sent packet that we failed to deserialize with method key " +
-					packet.SerializationMethod + ".");
+				this.ClassLogger.LogError(typeof(Peer).FullName + " ID: " + passTo.InternalNetConnection.RemoteUniqueIdentifier + " sent packet that we failed to deserialize with method key " +
+					packet.SerializerKey + ".");
 #if DEBUGBUILD
 				throw new SerializationException(typeof(EventPackage), null, e, "Failed to deserialize for eventpackage, likely due to serializer key: " +
-					packet.SerializationMethod + " being unreigstered.");
+					packet.SerializerKey + " being unreigstered.");
 #endif
+			}
+			catch(LoggableException e)
+			{
+				this.ClassLogger.LogError(e.Message);
 			}
 		}
 
-		private T GeneratePackage<T>(HigherLevelPacket packet, IHandler<HigherLevelPacket, T> handler) 
-			where T : INetworkPackage
+		private T GeneratePackage<T>(LidgrenTransferPacket packet, byte serializerKey)
+			where T : NetworkPackage, new()
 		{
-			return handler.Handle(packet);
+			return Converter.BuildIncomingNetPackage<T>(packet, SerializerRegister.GetValue(serializerKey));
 		}
 
 		private void RegisterApprovedConnection(NetConnection netConnection, byte connectionType)
@@ -417,16 +472,31 @@ namespace GladNet.Server
 				netConnection, connectionType));
 			if (cp != null)
 			{
+				//A connecting subserver should be treated as a client connection. ServerPeers are peers that should be created
+				//on the connected end, which can recieve events and responses, to its requests. So all approved connections should be added to the client
+				//registry.
 				ClassLogger.LogDebug("Connectiontype ID: " + connectionType);
-				if (connectionType == 0)
-				{
-					ClassLogger.LogDebug("Adding new client to ConnectionCollection. ID: " + cp.UniqueConnectionId);
-					Clients.Register(new ConnectionPair<NetConnection, ClientPeer>(netConnection, cp), netConnection.RemoteUniqueIdentifier);
-				}
+#if DEBUGBUILD
+				ClassLogger.LogDebug("Adding new client to ConnectionCollection. ID: " + cp.UniqueConnectionId);
+#endif
+				Clients.Register(new ConnectionPair<NetConnection, ClientPeer>(netConnection, cp), netConnection.RemoteUniqueIdentifier);
 			}
 			else
 				ClassLogger.LogError("cp is null");
 		}
+
+		/*private void ProcessServerToServerResponse(NetConnection connection)
+		{
+			ConnectionResponse cr = UnhandledServerConnections.FirstOrDefault
+				(x => x.InternalNetConnection.RemoteUniqueIdentifier == connection.RemoteUniqueIdentifier);
+
+			if (cr == null)
+			{
+				ClassLogger.LogError("Connected but failed to find ConnectionResponse. ID: "
+					+ connection.RemoteUniqueIdentifier);
+				return;
+			}
+		}*/
 		#endregion
 	}
 }

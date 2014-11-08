@@ -6,6 +6,7 @@ using System.Text;
 
 namespace GladNet.Common
 {
+	//TODO: Mark internal after testing.
 	[ProtoContract]
 	internal class LidgrenTransferPacket
 	{
@@ -13,7 +14,12 @@ namespace GladNet.Common
 		private byte[] internalHighLevelMessageRepresentation;
 
 		[ProtoMember(2)]
-		public Packet.OperationType OperationType { get; private set; }
+		private byte _OperationType;
+
+		public Packet.OperationType OperationType
+		{
+			get { return (Packet.OperationType)_OperationType; }
+		}
 
 		[ProtoMember(3)]
 		public byte EncryptionMethod { get; private set; }
@@ -45,7 +51,7 @@ namespace GladNet.Common
 				serializationKey = Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey;
 			}
 
-			OperationType = opType;
+			_OperationType = (byte)opType;
 			encryptionMethod = EncryptionMethod;
 			
 			PacketCode = PacketCode;
@@ -55,12 +61,6 @@ namespace GladNet.Common
 		{
 			return internalHighLevelMessageRepresentation;
 		}
-
-		/*//TODO: Implement encryption
-		public bool DecryptPackage()
-		{
-
-		}*/
 
 		//Protobuf-net constructor
 		private LidgrenTransferPacket()

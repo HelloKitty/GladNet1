@@ -16,11 +16,11 @@ namespace Common.Packet.Serializers
 			RegisteredSerializers = new Dictionary<byte, SerializerBase>();
 		}
 
-		public bool Register(SerializerBase instance, byte key)
+		public bool Register(SerializerBase obj, byte key)
 		{
-			if (!RegisteredSerializers.ContainsKey(instance.SerializerUniqueKey))
+			if (!RegisteredSerializers.ContainsKey(obj.SerializerUniqueKey))
 			{
-				OverrideRegisteredSerializer(instance);
+				OverrideRegisteredSerializer(obj);
 				return true;
 			}
 			else
@@ -34,7 +34,8 @@ namespace Common.Packet.Serializers
 
 		public void OverrideRegisteredSerializer(SerializerBase instance)
 		{
-			RegisteredSerializers[instance.SerializerUniqueKey] = instance;
+			if(instance != null)
+				RegisteredSerializers[instance.SerializerUniqueKey] = instance;
 		}
 
 		public IEnumerable<SerializerBase> Serializers()
@@ -42,7 +43,7 @@ namespace Common.Packet.Serializers
 			return RegisteredSerializers.Values;
 		}
 
-		public SerializerBase Get(byte key)
+		public SerializerBase GetValue(byte key)
 		{
 			if (RegisteredSerializers.ContainsKey(key))
 				return RegisteredSerializers[key];
@@ -57,7 +58,7 @@ namespace Common.Packet.Serializers
 
 		public SerializerBase this[byte key]
 		{
-			get { return Get(key); }
+			get { return GetValue(key); }
 		}
 	}
 }

@@ -11,24 +11,22 @@ namespace GladNet.Common
 
 	internal class PacketConverter
 	{
-		private readonly SerializerBase Serializer;
-
-		protected PacketBase PacketConstructor(byte[] bytes)
+		protected PacketBase PacketConstructor(byte[] bytes, SerializerBase serializer)
 		{
 			if (bytes != null)
-				return Serializer.Deserialize<PacketBase>(bytes);
+				return serializer.Deserialize<PacketBase>(bytes);
 			else
 				return null;
 		}
 
-		public NetworkPackageType BuildIncomingNetPackage<NetworkPackageType>(LidgrenTransferPacket lgPacket)
+		public NetworkPackageType BuildIncomingNetPackage<NetworkPackageType>(LidgrenTransferPacket lgPacket, SerializerBase serializer)
 			where NetworkPackageType : NetworkPackage, new()
 		{
 			NetworkPackageType package = new NetworkPackageType();
 
 			try
 			{
-				PacketBase p = PacketConstructor(lgPacket.GetInternalBytes());
+				PacketBase p = PacketConstructor(lgPacket.GetInternalBytes(), serializer);
 
 				package.FillPackage(p == null ? new MalformedPacket() : p, lgPacket.PacketCode,
 					lgPacket.EncryptionMethod != 0);
@@ -36,6 +34,7 @@ namespace GladNet.Common
 			catch (SerializationException e)
 			{
 				//TODO: Better support for encryption
+				throw;
 				package.FillPackage(new MalformedPacket(), lgPacket.PacketCode, lgPacket.EncryptionMethod != 0);
 			}
 			catch (Exception e)
@@ -46,40 +45,4 @@ namespace GladNet.Common
 			return package;
 		}
 	}
-
-	/*internal class ProtobufNetPacketConverter
-	{
-		public NetworkPackageType BuildIncomingNetPackage<NetworkPackageType>(LidgrenTransferPacket lgPacket)
-			where NetworkPackageType : NetworkPackage<ProtobufNetSerializer>, new()
-		{
-			NetworkPackageType package = new NetworkPackageType();
-
-			try
-			{
-				Packet p = PacketConstructor(lgPacket.GetInternalBytes());
-
-				package.FillPackage(p == null ? new MalformedPacket() : p, lgPacket.PacketCode,
-					lgPacket.EncryptionMethod != 0);
-			}
-			catch (SerializationException e)
-			{
-				//TODO: Better support for encryption
-				package.FillPackage(new MalformedPacket(), lgPacket.PacketCode, lgPacket.EncryptionMethod != 0);
-			}
-			catch (Exception e)
-			{
-				throw;
-			}
-
-			return package;
-		}
-
-		protected Packet PacketConstructor(byte[] bytes)
-		{
-			if (bytes != null)
-				return Serializer<ProtobufNetSerializer>.Instance.Deserialize<Packet>(bytes);
-			else
-				return null;
-		}
-	}*/
 }

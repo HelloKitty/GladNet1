@@ -73,8 +73,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="App\Logging\ILoggable.cs" />
-    <Compile Include="App\Logging\Logger.cs" />
     <Compile Include="App\Logging\Loggers\AsyncConsoleLogger.cs" />
     <Compile Include="App\ServerCore.cs" />
     <Compile Include="Connections\Connection Components\ConnectionCollection.cs" />
@@ -84,7 +82,6 @@
     <Compile Include="Connections\Connection Components\ConnectionResponse.cs" />
     <Compile Include="Connections\Peer.cs" />
     <Compile Include="Connections\ClientPeer.cs" />
-    <Compile Include="Connections\Readers\IPollable.cs" />
     <Compile Include="Connections\ServerPeer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -115,6 +112,9 @@
       <Project>{d0114cbd-4211-4106-b8e2-23be2fde0d53}</Project>
       <Name>Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Connections\Readers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

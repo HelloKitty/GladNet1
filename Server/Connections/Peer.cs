@@ -9,19 +9,19 @@ using System.Threading.Tasks;
 
 namespace GladNet.Server
 {
-	public abstract class Peer : IConnectionDetails
+	public abstract class Peer
 	{
-		#region IConnectionDetails Implementation
 		public IPEndPoint RemoteConnectionEndpoint { get; private set; }
 		public long UniqueConnectionId { get; private set; }
-		public NetConnection InternalNetConnection { get; private set; }
-		#endregion
+		internal NetConnection InternalNetConnection { get; private set; }
 
-		public bool isConnected { get; private set; }
+		public bool isConnected
+		{
+			get { return InternalNetConnection.Status == NetConnectionStatus.Connected; }
+		}
 
 		public Peer(IConnectionDetails details)
 		{
-			isConnected = true;
 			MemberwiseConnectionDetailsCopyToClass(details);
 		}
 
@@ -45,29 +45,47 @@ namespace GladNet.Server
 
 		internal void InternalOnDisconnection()
 		{
-			isConnected = false;
+			InternalNetConnection.Disconnect("Disconnecting");
 			OnDisconnection();
 		}
+
 		public abstract void OnDisconnection();
 
 		//TODO: Implementation encryption functionality
-		internal Packet.SendResult SendMessage<T>(Packet.OperationType type, Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
-			where T : SerializerBase
+		internal Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
 		{
-			byte[] bytes = packet.Serialize();
-			return (Packet.SendResult)InternalNetConnection.SendMessage(false, bytes, (byte)type, Serializer<T>.Instance.SerializerUniqueKey, packetCode,
-				Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel, encrypt);
+			try
+			{
+				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(type, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
+
+				byte[] bytes = Serializer<ProtobufNetSerializer>.Instance.Serialize(transferPacket);
+
+				return (Packet.SendResult)this.InternalNetConnection.SendMessage(false, bytes, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel);
+			}
+			catch(Exception e)
+			{
+				throw new LoggableException("Exception occured in serialization of packet.", e, Logger.LogType.Error);
+			}
 		}
 
 		//TODO: One day we will need to optimize the ability to broadcast messages as we'll have to convert to a NetConnection list at some point when it's being called externally through
 		//the exposed API of GladNet.
-		public void BroadcastEvent<T>(IList<Peer> connections, Packet<T> packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
-			where T : SerializerBase
+		public void BroadcastEvent(IList<Peer> connections, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
 		{
-			byte[] bytes = packet.Serialize();
-			//Inefficient O(n) casting to a NetConnection list. Not good.
-			this.InternalNetConnection.Peer.SendMessage
-				(false, connections.Select(x => x.InternalNetConnection).ToList(), bytes, (byte)Packet.OperationType.Event, Serializer<T>.Instance.SerializerUniqueKey, packetCode, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel, encrypt);
+			try
+			{
+				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(Packet.OperationType.Event, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
+
+				byte[] bytes = Serializer<ProtobufNetSerializer>.Instance.Serialize(transferPacket);
+
+
+				//Inefficient O(n) casting to a NetConnection list. Not good.
+				this.InternalNetConnection.Peer.SendMessage(false, connections.Select(x => x.InternalNetConnection).ToList(), bytes, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel);
+			}
+			catch(Exception e)
+			{
+				throw new LoggableException("Exception occured in serialization of packet.", e, Logger.LogType.Error);
+			}
 		}
 	}
 }

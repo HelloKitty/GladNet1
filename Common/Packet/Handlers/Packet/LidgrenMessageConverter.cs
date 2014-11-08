@@ -31,7 +31,7 @@ namespace Common.Packet.Handlers
 			return this.HandlerCollection.Remove(key);
 		}
 
-		public PacketConverter Get(byte key)
+		public PacketConverter GetValue(byte key)
 		{
 			return HandlerCollection[key];
 		}
@@ -43,7 +43,7 @@ namespace Common.Packet.Handlers
 
 		public PacketConverter this[byte key]
 		{
-			get { return Get(key); }
+			get { return GetValue(key); }
 		}
 	}
 }

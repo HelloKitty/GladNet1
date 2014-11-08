@@ -7,7 +7,7 @@ namespace Common.Register
 {
 	public interface IHashContainer<TObj, TKey>
 	{
-		TObj Get(TKey key);
+		TObj GetValue(TKey key);
 		bool HasKey(TKey key);
 	}
 }

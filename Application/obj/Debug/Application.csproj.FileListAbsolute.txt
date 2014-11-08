@@ -26,3 +26,4 @@ C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\bin\Debug\AutoMappe
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\bin\Debug\AutoMapper.xml
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\obj\Debug\Application.exe
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\obj\Debug\Application.pdb
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\obj\Debug\Application.csprojResolveAssemblyReference.cache
