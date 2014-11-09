@@ -8,7 +8,6 @@ using System.Text;
 
 namespace GladNet.Common
 {
-
 	internal class PacketConverter
 	{
 		protected PacketBase PacketConstructor(byte[] bytes, SerializerBase serializer)
@@ -35,7 +34,7 @@ namespace GladNet.Common
 			{
 				//TODO: Better support for encryption
 				throw;
-				package.FillPackage(new MalformedPacket(), lgPacket.PacketCode, lgPacket.EncryptionMethod != 0);
+				//package.FillPackage(new MalformedPacket(), lgPacket.PacketCode, lgPacket.EncryptionMethod != 0);
 			}
 			catch (Exception e)
 			{

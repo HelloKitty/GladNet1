@@ -23,4 +23,3 @@ C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\obj\Debug\Common.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\obj\Debug\Common.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\bin\Debug\Common.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\bin\Debug\Common.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\obj\Debug\Common.csprojResolveAssemblyReference.cache
