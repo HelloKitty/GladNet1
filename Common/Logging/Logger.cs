@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GladNet.Server.Logging
+namespace GladNet.Common
 {
 	public abstract class Logger
 	{
 		[Flags]
-		public enum State
+		public enum LogType
 		{
 			Disabled = 0,
 			Error = 2,
@@ -20,9 +20,9 @@ namespace GladNet.Server.Logging
 		/// <summary>
 		/// Indicates which state the logger is in.
 		/// </summary>
-		public State LoggerState { get; protected set; }
+		public LogType LoggerState { get; protected set; }
 
-		public Logger(State loggerState)
+		public Logger(LogType loggerState)
 		{
 			LoggerState = loggerState;
 		}
@@ -32,32 +32,32 @@ namespace GladNet.Server.Logging
 		/// </summary>
 		/// <param name="state">A logger state.</param>
 		/// <returns>Indicates if the logger is in the given state.</returns>
-		bool isStateEnabled(State state)
+		bool isStateEnabled(LogType state)
 		{
-			return LoggerState.HasFlag(state);
+			return (LoggerState & state) == state;
 		}
 
 		//TODO: Documentation
 		#region Error Logging methods
 		public void LogError(string text)
 		{
-			if (this.isStateEnabled(State.Error))
-				Log(text, State.Error);
+			if (this.isStateEnabled(LogType.Error))
+				Log(text, LogType.Error);
 		}
 		public void LogError(string text, object[] data)
 		{
-			if (this.isStateEnabled(State.Error))
-				Log(text, data, State.Error);
+			if (this.isStateEnabled(LogType.Error))
+				Log(text, data, LogType.Error);
 		}
 		public void LogError(string text, string[] data)
 		{
-			if (this.isStateEnabled(State.Error))
-				Log(text, data, State.Error);
+			if (this.isStateEnabled(LogType.Error))
+				Log(text, data, LogType.Error);
 		}
 		public void LogError(object obj)
 		{
-			if (this.isStateEnabled(State.Error))
-				Log(obj, State.Error);
+			if (this.isStateEnabled(LogType.Error))
+				Log(obj, LogType.Error);
 		}
 		#endregion
 
@@ -65,23 +65,23 @@ namespace GladNet.Server.Logging
 		#region Warning logger methods
 		public void LogWarn(string text)
 		{
-			if (this.isStateEnabled(State.Warn))
-				Log(text, State.Warn);
+			if (this.isStateEnabled(LogType.Warn))
+				Log(text, LogType.Warn);
 		}
 		public void LogWarn(string text, object[] data)
 		{
-			if (this.isStateEnabled(State.Warn))
-				Log(text, data, State.Warn);
+			if (this.isStateEnabled(LogType.Warn))
+				Log(text, data, LogType.Warn);
 		}
 		public void LogWarn(string text, string[] data)
 		{
-			if (this.isStateEnabled(State.Warn))
-				Log(text, data, State.Warn);
+			if (this.isStateEnabled(LogType.Warn))
+				Log(text, data, LogType.Warn);
 		}
 		public void LogWarn(object obj)
 		{
-			if (this.isStateEnabled(State.Warn))
-				Log(obj, State.Warn);
+			if (this.isStateEnabled(LogType.Warn))
+				Log(obj, LogType.Warn);
 		}
 		#endregion
 
@@ -89,31 +89,31 @@ namespace GladNet.Server.Logging
 		#region Debug logger methods
 		public void LogDebug(string text)
 		{
-			if (this.isStateEnabled(State.Debug))
-				Log(text, State.Debug);
+			if (this.isStateEnabled(LogType.Debug))
+				Log(text, LogType.Debug);
 		}
 		public void LogDebug(string text, object[] data)
 		{
-			if (this.isStateEnabled(State.Debug))
-				Log(text, data, State.Debug);
+			if (this.isStateEnabled(LogType.Debug))
+				Log(text, data, LogType.Debug);
 		}
 		public void LogDebug(string text, string[] data)
 		{
-			if (this.isStateEnabled(State.Debug))
-				Log(text, data, State.Debug);
+			if (this.isStateEnabled(LogType.Debug))
+				Log(text, data, LogType.Debug);
 		}
 		public void LogDebug(object obj)
 		{
-			if (this.isStateEnabled(State.Debug))
-				Log(obj, State.Debug);
+			if (this.isStateEnabled(LogType.Debug))
+				Log(obj, LogType.Debug);
 		}
 		#endregion
 
 		#region True logger methods
-		protected abstract void Log(string text, State state);
-		protected abstract void Log(string text, object[] data, State state);
-		protected abstract void Log(string text, string[] data, State state);
-		protected abstract void Log(object obj, State state);
+		protected abstract void Log(string text, LogType state);
+		protected abstract void Log(string text, object[] data, LogType state);
+		protected abstract void Log(string text, string[] data, LogType state);
+		protected abstract void Log(object obj, LogType state);
 		#endregion
 	}
 }

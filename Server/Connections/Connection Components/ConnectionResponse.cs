@@ -16,14 +16,13 @@ namespace GladNet.Server.Connections
 
 		public readonly string HailUsed;
 
-		internal readonly bool Result;
+		internal bool Result { get; set; }
 
-		public ConnectionResponse(IPEndPoint point, long uid, NetConnection connection, bool result, string hail)//, byte connectionType)
+		public ConnectionResponse(IPEndPoint point, long uid, NetConnection connection, string hail)//, byte connectionType)
 		{
 			this.RemoteConnectionEndpoint = point;
 			this.UniqueConnectionId = uid;
 			this.InternalNetConnection = connection;
-			Result = result;
 			HailUsed = hail;
 		}
 	}

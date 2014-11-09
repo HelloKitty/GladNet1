@@ -1,4 +1,5 @@
-﻿using GladNet.Server.Logging;
+﻿using GladNet.Common;
+using GladNet.Server.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GladNet.Server.App.Logging.Loggers
+namespace GladNet.Server
 {
 	public sealed class AsyncConsoleLogger : Logger
 	{
@@ -23,12 +24,12 @@ namespace GladNet.Server.App.Logging.Loggers
 		public static AsyncConsoleLogger Instance { get { return _Instance.Value; } }
 
 		private AsyncConsoleLogger() 
-			: base(State.Error)
+			: base(Logger.LogType.Error)
 		{
 			BlockingQueue = new BlockingCollection<string>();
 		}
 
-		public void SetState(State newState)
+		public void SetState(Logger.LogType newState)
 		{
 			this.LoggerState = newState;
 			Task.Factory.StartNew(() =>
@@ -37,22 +38,22 @@ namespace GladNet.Server.App.Logging.Loggers
 				}, TaskCreationOptions.LongRunning);
 		}
 
-		protected override void Log(string text, Logger.State state)
+		protected override void Log(string text, Logger.LogType state)
 		{
 			BlockingQueue.Add(state.ToString() + ": " + text);
 		}
 
-		protected override void Log(string text, object[] data, Logger.State state)
+		protected override void Log(string text, object[] data, Logger.LogType state)
 		{
 			
 		}
 
-		protected override void Log(string text, string[] data, Logger.State state)
+		protected override void Log(string text, string[] data, Logger.LogType state)
 		{
 			
 		}
 
-		protected override void Log(object obj, Logger.State state)
+		protected override void Log(object obj, Logger.LogType state)
 		{
 			
 		}

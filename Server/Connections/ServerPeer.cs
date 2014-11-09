@@ -17,7 +17,7 @@ namespace GladNet.Server.Connections
 
 		public override void PackageRecieve(RequestPackage package)
 		{
-			throw new Exception("ServerPeer base recieved a RequestPackage but ServerPeer cannot handle this message type.");
+			throw new LoggableException("ServerPeer base recieved a RequestPackage but ServerPeer cannot handle this message type.", null, Logger.LogType.Error);
 		}
 
 		public override abstract void PackageRecieve(EventPackage package);
