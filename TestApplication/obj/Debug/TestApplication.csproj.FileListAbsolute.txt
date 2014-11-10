@@ -14,19 +14,3 @@ C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\TestApplic
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\TestApplication\bin\Debug\System.Threading.xml
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\TestApplication\bin\Debug\protobuf-net.pdb
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\TestApplication\bin\Debug\protobuf-net.xml
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\TestApplication.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\TestApplication.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\Common.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\protobuf-net.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\Server.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\Lidgren.Network.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\System.Threading.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\Common.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\Server.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\protobuf-net.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\protobuf-net.xml
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\Lidgren.Network.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\bin\Debug\System.Threading.xml
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\obj\Debug\TestApplication.csprojResolveAssemblyReference.cache
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\obj\Debug\TestApplication.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\TestApplication\obj\Debug\TestApplication.pdb

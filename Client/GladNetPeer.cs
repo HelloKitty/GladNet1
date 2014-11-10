@@ -15,6 +15,7 @@ namespace GladNet.Client
 	{
 		#region Package Action Queue
 		private object networkIncomingEnqueueSyncObj;
+		//TODO: Explore the GC pressure that a queue of Actions, with lambdas creating them, causes.
 		private Queue<Action> networkPackageQueue;
 		#endregion
 
@@ -31,22 +32,49 @@ namespace GladNet.Client
 
 		private volatile bool _isConnected;
 
-		private PacketConverter converter;
-
 		public bool isConnected
 		{
 			get { return _isConnected; }
 		}
 
-		public GladNetPeer(Logger logger)
+#if UNITYDEBUG || UNITYRELEASE
+		public GladNetPeer(IListener listener, Logger logger = null)
 		{
-			converter = new PacketConverter();
+			RecieverListener = listener;
+			//Call the interface method to register the packets.
+			RegisterProtobufPackets(Packet.Register);
+
+			//This registers the default serializer
+			this.SerializerRegister.Register(Serializer<ProtobufNetSerializer>.Instance, Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey);
+
+			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
 			networkPackageQueue = new Queue<Action>(20);
 			networkIncomingEnqueueSyncObj = new object();
 			internalLidgrenClient = null;
-			RecieverListener = null;
 			_isConnected = false;
+
+			//Registering the empty packet
+			Packet.Register(typeof(EmptyPacket), true);
 		}
+#else
+		public GladNetPeer(IListener listener, Logger logger)
+		{
+			RecieverListener = listener;
+
+			ClassLogger = logger;
+
+			//This registers the default serializer
+			this.SerializerRegister.Register(Serializer<ProtobufNetSerializer>.Instance, Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey);
+
+			networkPackageQueue = new Queue<Action>(20);
+			networkIncomingEnqueueSyncObj = new object();
+			internalLidgrenClient = null;
+			_isConnected = false;
+
+					//Registering the empty packet
+			Packet.Register(typeof(EmptyPacket), true);
+		}
+#endif
 
 		/// <summary>
 		/// 
@@ -69,7 +97,7 @@ namespace GladNet.Client
 		}
 
 
-		public bool Connect(string ip, int port, string hailMessage, string appName, IListener listener)
+		public bool Connect(string ip, int port, string hailMessage, string appName)
 		{
 			if (isConnected)
 				this.Disconnect();
@@ -79,15 +107,13 @@ namespace GladNet.Client
 
 			if (ip == null || appName == null || ip.Length == 0)
 			{
+				ClassLogger.LogError("Connection to remote host must have a valid appname and IP address.");
 #if UNITYDEBUG || UNITYRELEASE
-				Debug.LogError("Connection to remote host must have a valid appname and IP address.");
 				return false;
 #else
 				throw new NullReferenceException("Connection to remote host must have a valid appname and IP address.");
 #endif
-			}
-
-			RecieverListener = listener;
+			}	
 
 			//This should reduce GC which is always terrible for Unity.
 			config.UseMessageRecycling = true;
@@ -107,10 +133,8 @@ namespace GladNet.Client
 		{
 			if(networkThread != null)
 			{
-#if UNITYDEBUG || UNITYRELEASE
-				Debug.LogError("Attempted to start listener while listener is spinning.");
-				return;
-#else
+				ClassLogger.LogError("Attempted to start listener while listener is spinning.");
+#if !UNITYDEBUG && !UNITYRELEASE
 				//TODO: Better exception throwing
 				throw new Exception("Attempted to start listener while listener is spinning.");
 #endif
@@ -123,22 +147,19 @@ namespace GladNet.Client
 
 		private void NetworkListenerThreadMethod()
 		{
-#if UNITYDEBUG
-			Debug.Log("Started network thread.");
-#endif
-
-#if DEBUG
-			Console.WriteLine("Started network thread.");
+#if UNITYDEBUG || DEBUG
+			ClassLogger.LogDebug("Started network thread.");
 #endif
 
 
 			if(internalLidgrenClient == null || internalLidgrenClient == null)
 			{
-#if UNITYDEBUG || UNITYRELEASE
-				Debug.LogError("Cannot start listening before connecting.");
-#else
+				ClassLogger.LogError("Cannot start listening before connecting.");
+
+#if !UNITYDEBUG && !UNITYRELEASE			
 				throw new NullReferenceException("Cannot start listening before connecting. Internally a client object is null.");
 #endif
+
 			}
 
 			NetIncomingMessage msg;
@@ -149,8 +170,9 @@ namespace GladNet.Client
 
 				ServiceLidgrenMessage(msg);
 
-				//Recycling the message reduces GC which can be make or break for Unity.
-				this.internalLidgrenClient.Recycle(msg);
+				if(msg != null)
+					//Recycling the message reduces GC which can be make or break for Unity.
+					this.internalLidgrenClient.Recycle(msg);
 			}
 
 			networkThread = null;
@@ -171,16 +193,16 @@ namespace GladNet.Client
 					catch(NetException e)
 					{
 #if UNITYDEBUG
-						Debug.LogError("Malformed packet recieved. Packet indicated that it was a status change but had no info.");
+						ClassLogger.LogError("Malformed packet recieved. Packet indicated that it was a status change but had no info.");
 #else
 						//TODO: What shall we do when the packet is malformed here?
 #endif
 					}
 					catch(LoggableException e)
 					{
-#if UNITYDEBUG
-						Debug.Log(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
-#endif
+						//Checking this because it can cause some nasty GC to make these string adds.
+						if (ClassLogger.isStateEnabled(Logger.LogType.Debug))
+							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
 
@@ -191,8 +213,9 @@ namespace GladNet.Client
 					}
 					catch(LoggableException e)
 					{
-						if(ClassLogger.LoggerState == Logger.LogType.Debug)
-						ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
+						//Checking this because it can cause some nasty GC to make these string adds.
+						if (ClassLogger.isStateEnabled(Logger.LogType.Debug))
+							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
 			}
@@ -200,7 +223,72 @@ namespace GladNet.Client
 
 		private void HandleExternalHighLevelMessage(NetIncomingMessage msg)
 		{
+			LidgrenTransferPacket transferPacket = GenerateTransferPacket(msg.Data);
 
+			if(transferPacket == null)
+			{
+				ClassLogger.LogDebug("Recieved a null transfer packet for highlevel message response. This may be the unlikely scenario of package corruption.");
+				return;
+			}
+
+			try
+			{
+				switch (transferPacket.OperationType)
+				{
+					case Packet.OperationType.Event:
+						EventPackage ePackage = this.Converter.BuildIncomingNetPackage<EventPackage>(transferPacket, SerializerRegister[transferPacket.SerializerKey]);
+
+						if (ePackage != null)
+							this.RecieverListener.RecievePackage(ePackage);
+#if DEBUG || UNITYDEBUG
+						else
+							ClassLogger.LogError("Failed to create EventPackage.");
+#endif
+						break;
+
+					case Packet.OperationType.Response:
+						ResponsePackage rPackage = this.Converter.BuildIncomingNetPackage<ResponsePackage>(transferPacket, SerializerRegister[transferPacket.SerializerKey]);
+
+						if (rPackage != null)
+							this.RecieverListener.RecievePackage(rPackage);
+#if DEBUG || UNITYDEBUG
+						else
+							ClassLogger.LogError("Failed to create ResponsePackage.");
+#endif
+						break;
+
+					default:
+						//Malicious party could send a fake package. Don't crash the app just for that.
+						//Plus it could just be data corruption. Nothing can be done.
+#if DEBUG || UNITYDEBUG
+						ClassLogger.LogError("Recieved an unhandlable OperationType for a packet. Type: " + transferPacket.OperationType.ToString());
+#endif
+						break;
+				}
+			}
+			catch(NullReferenceException e)
+			{
+			//Malicious party could send a fake package. Don't crash the app just for that.
+			//Plus it could just be data corruption. Nothing can be done.
+#if DEBUG || UNITYDEBUG
+				ClassLogger.LogError("Recieved a packet from server with SerializationKey: {0} which has not registered serializer.", transferPacket.SerializerKey);
+#else
+				ClassLogger.LogDebug("Recieved a packet from server with SerializationKey: {0} which has not registered serializer.", transferPacket.SerializerKey);
+#endif
+			}
+		}
+
+		private LidgrenTransferPacket GenerateTransferPacket(byte[] bytes)
+		{
+			try
+			{
+				return Serializer<ProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(bytes);
+			}
+			catch (LoggableException e)
+			{
+				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
+				return null;
+			}
 		}
 
 		private void HandleStatusChange(NetConnectionStatus status)
@@ -211,7 +299,9 @@ namespace GladNet.Client
 					QueueStatusChange(StatusChange.Connected);
 					break;
 				case NetConnectionStatus.Disconnected:
-					QueueStatusChange(StatusChange.Disconnected);
+					//We need to let the main thread modify the value of _isConnected so that the final status change message will be polled.
+					networkPackageQueue.Enqueue(() => { _isConnected = false; RecieverListener.OnStatusChange(StatusChange.Disconnected); });
+					//QueueStatusChange(StatusChange.Disconnected);
 					break;
 				case NetConnectionStatus.InitiatedConnect:
 					QueueStatusChange(StatusChange.Connecting);
@@ -242,7 +332,7 @@ namespace GladNet.Client
 			else
 			{
 #if UNITYDEBUG || UNITYRELEASE
-				Debug.LogError("Internal lidgren client is null. Do not invoke HailMessageGeneration via reflection.");
+				ClassLogger.LogError("Internal lidgren client is null. Do not invoke HailMessageGeneration via reflection.");
 				return null;
 #else
 				throw new NullReferenceException("internalLidgrenClient is null for some reason.");
@@ -288,6 +378,9 @@ namespace GladNet.Client
 
 		protected override void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
 		{
+			if (RecieverListener == null)
+				ClassLogger.LogError("The IListener instance passed in on connection is a null reference.");
+
 			try
 			{
 				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);

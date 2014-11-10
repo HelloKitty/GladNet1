@@ -64,10 +64,10 @@
     <Compile Include="Exceptions\SerializationException.cs" />
     <Compile Include="Logging\ILoggable.cs" />
     <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\Loggers\ConsoleLogger.cs" />
     <Compile Include="Packet\Handlers\Handler.cs" />
     <Compile Include="Packet\Handlers\MessageReciever.cs" />
     <Compile Include="Packet\Handlers\Packet\PacketConverter.cs" />
-    <Compile Include="Packet\Handlers\Packet\LidgrenMessageConverter.cs" />
     <Compile Include="Packet\LidgrenTransferPacket.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
     <Compile Include="Packet\Packages\ResponsePackage.cs" />
