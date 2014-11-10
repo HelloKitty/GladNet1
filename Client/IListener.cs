@@ -8,6 +8,8 @@ namespace GladNet.Client
 {
 	public interface IListener
 	{
+		void RegisterProtobufPackets(Func<Type, bool> registerMethod);
+
 		void RecievePackage(EventPackage eventPackage);
 		void RecievePackage(ResponsePackage responsePackage);
 

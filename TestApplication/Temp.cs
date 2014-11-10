@@ -32,23 +32,23 @@ namespace GladNet.Server.Connections
 			Console.WriteLine(text);
 		}
 
-		protected override void Log(string text, object[] data, Logger.LogType state)
+		protected override void Log(string text, Logger.LogType state, params object[] data)
 		{
-
+			throw new NotImplementedException();
 		}
 
-		protected override void Log(string text, string[] data, Logger.LogType state)
+		protected override void Log(string text, Logger.LogType state, params string[] data)
 		{
-
+			throw new NotImplementedException();
 		}
 
 		protected override void Log(object obj, Logger.LogType state)
 		{
-
+			throw new NotImplementedException();
 		}
 	}
 
-	public class Temp : ServerCore<AsyncConsoleLogger>	
+	public class Temp : ServerCore
 	{
 
 		public Temp(string s) : base(AsyncConsoleLogger.Instance, "test", 5056, "hiya")
@@ -79,10 +79,9 @@ namespace GladNet.Server.Connections
 
 		}
 
-		protected override void RegisterPackets(Func<Type, bool> registerAsDefaultFunc)
+		protected override void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
 		{
 			registerAsDefaultFunc(typeof(TestPacket));
-			//registerAsDefaultFunc(typeof(EmptyPacket));
 		}
 
 		protected override byte ServerTypeUniqueByte
@@ -106,13 +105,12 @@ namespace GladNet.Server.Connections
 
 		public override void PackageRecieve(RequestPackage package)
 		{
-			Console.WriteLine("Recieved a package request.");
-			Console.WriteLine("PacketType: " + package.PacketObject.GetType().FullName);
+			AsyncConsoleLogger.Instance.LogDebug("Recieved a package request.");
 		}
 
 		public override void OnDisconnection()
 		{
-			Console.WriteLine("Disconnected");
+			AsyncConsoleLogger.Instance.LogDebug("Disconnected");
 		}
 	}
 }

@@ -31,6 +31,9 @@ namespace GladNet.Server.App.Main
 
 				serverObject.ExecuteMethod("InternalOnStartup");
 				serverObject.ExecuteMethod("Poll");
+
+				//If we hit this point the server is outside of its execution loop so we need to shut it down.
+				serverObject.ExecuteMethod("InternalOnShutdown");
 			}
 			else
 				PublishError("Failed to load type: returned null", true, Console.WriteLine, () => { Console.ReadKey(); });

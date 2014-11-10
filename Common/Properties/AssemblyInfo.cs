@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: InternalsVisibleTo("Server", AllInternalsVisible = true)]
 [assembly: InternalsVisibleTo("Lidgren Client Test", AllInternalsVisible=true)]
+[assembly: InternalsVisibleTo("Client", AllInternalsVisible=true)]
 [assembly: AssemblyTitle("Common")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]

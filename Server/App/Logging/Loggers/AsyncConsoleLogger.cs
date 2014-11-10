@@ -34,7 +34,7 @@ namespace GladNet.Server
 			this.LoggerState = newState;
 			Task.Factory.StartNew(() =>
 				{
-					while(true) Console.WriteLine(BlockingQueue.Take());
+					while (true) Console.WriteLine(BlockingQueue.Take());
 				}, TaskCreationOptions.LongRunning);
 		}
 
@@ -43,19 +43,26 @@ namespace GladNet.Server
 			BlockingQueue.Add(state.ToString() + ": " + text);
 		}
 
-		protected override void Log(string text, object[] data, Logger.LogType state)
+		protected override void Log(string text, Logger.LogType state, params object[] data)
 		{
-			
+			StringBuilder builder = new StringBuilder();
+
+			builder.AppendFormat(state.ToString() + ": " + text, data);
+
+			BlockingQueue.Add(builder.ToString());
 		}
 
-		protected override void Log(string text, string[] data, Logger.LogType state)
+		protected override void Log(string text, Logger.LogType state, params string[] data)
 		{
-			
+			this.Log(state.ToString() + ": " + text, state, data);
 		}
 
 		protected override void Log(object obj, Logger.LogType state)
 		{
-			
+			if (obj == null)
+				return;
+
+			BlockingQueue.Add(state.ToString() + ": " + obj.ToString());
 		}
 	}
 }

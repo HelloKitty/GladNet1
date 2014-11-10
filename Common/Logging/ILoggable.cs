@@ -15,8 +15,8 @@ namespace GladNet.Server.Logging
 		Warn
 	}*/
 
-	public interface ILoggable<LoggerType> where LoggerType : Logger
+	public interface ILoggable
 	{
-		LoggerType ClassLogger { get; }
+		Logger ClassLogger { get; }
 	}
 }

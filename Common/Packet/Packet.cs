@@ -165,9 +165,17 @@ namespace GladNet.Common
 			else
 				ReferencedProtobufSubtypes.Add(attr.UniquePacketKey);
 
-			//The crown jewel.
-			RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);
-
+			try
+			{
+				//The crown jewel.
+				RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);
+			}
+			//This could happen if someone tries to register a packet after we've compiled or something
+			catch(ProtoException e)
+			{
+				throw new LoggableException("Failed to register PacketType: " + t.FullName + " ID: " + attr.UniquePacketKey + "." +
+					" You may be trying to register it with an invalid ID or multiple times.", e, Logger.LogType.Error);
+			}
 			return true;
 		}
 	}

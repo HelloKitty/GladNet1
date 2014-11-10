@@ -32,7 +32,7 @@ namespace GladNet.Common
 		/// </summary>
 		/// <param name="state">A logger state.</param>
 		/// <returns>Indicates if the logger is in the given state.</returns>
-		bool isStateEnabled(LogType state)
+		public bool isStateEnabled(LogType state)
 		{
 			return (LoggerState & state) == state;
 		}
@@ -44,15 +44,15 @@ namespace GladNet.Common
 			if (this.isStateEnabled(LogType.Error))
 				Log(text, LogType.Error);
 		}
-		public void LogError(string text, object[] data)
+		public void LogError(string text, params object[] data)
 		{
 			if (this.isStateEnabled(LogType.Error))
-				Log(text, data, LogType.Error);
+				Log(text, LogType.Error, data);
 		}
-		public void LogError(string text, string[] data)
+		public void LogError(string text, params string[] data)
 		{
 			if (this.isStateEnabled(LogType.Error))
-				Log(text, data, LogType.Error);
+				Log(text, LogType.Error, data);
 		}
 		public void LogError(object obj)
 		{
@@ -68,15 +68,15 @@ namespace GladNet.Common
 			if (this.isStateEnabled(LogType.Warn))
 				Log(text, LogType.Warn);
 		}
-		public void LogWarn(string text, object[] data)
+		public void LogWarn(string text, params object[] data)
 		{
 			if (this.isStateEnabled(LogType.Warn))
-				Log(text, data, LogType.Warn);
+				Log(text, LogType.Warn, data);
 		}
-		public void LogWarn(string text, string[] data)
+		public void LogWarn(string text, params string[] data)
 		{
 			if (this.isStateEnabled(LogType.Warn))
-				Log(text, data, LogType.Warn);
+				Log(text, LogType.Warn, data);
 		}
 		public void LogWarn(object obj)
 		{
@@ -92,15 +92,15 @@ namespace GladNet.Common
 			if (this.isStateEnabled(LogType.Debug))
 				Log(text, LogType.Debug);
 		}
-		public void LogDebug(string text, object[] data)
+		public void LogDebug(string text, params object[] data)
 		{
 			if (this.isStateEnabled(LogType.Debug))
-				Log(text, data, LogType.Debug);
+				Log(text, LogType.Debug, data);
 		}
-		public void LogDebug(string text, string[] data)
+		public void LogDebug(string text, params string[] data)
 		{
 			if (this.isStateEnabled(LogType.Debug))
-				Log(text, data, LogType.Debug);
+				Log(text, LogType.Debug, data);
 		}
 		public void LogDebug(object obj)
 		{
@@ -111,8 +111,8 @@ namespace GladNet.Common
 
 		#region True logger methods
 		protected abstract void Log(string text, LogType state);
-		protected abstract void Log(string text, object[] data, LogType state);
-		protected abstract void Log(string text, string[] data, LogType state);
+		protected abstract void Log(string text, LogType state, params object[] data);
+		protected abstract void Log(string text, LogType state, params string[] data);
 		protected abstract void Log(object obj, LogType state);
 		#endregion
 	}
