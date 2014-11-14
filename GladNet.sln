@@ -10,8 +10,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{217E89D2-A64C-48EB-9EC1-5F97CB98D6B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApplication", "TestApplication\TestApplication.csproj", "{13648085-6DC7-488E-8EE0-71389E3D7A96}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{D0114CBD-4211-4106-B8E2-23BE2FDE0D53}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{FB587A33-3888-4296-8C32-DE9D175AB11F}"
@@ -36,11 +34,6 @@ Global
 		{217E89D2-A64C-48EB-9EC1-5F97CB98D6B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{217E89D2-A64C-48EB-9EC1-5F97CB98D6B5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{217E89D2-A64C-48EB-9EC1-5F97CB98D6B5}.UnityDebug|Any CPU.ActiveCfg = UnityDebug|Any CPU
-		{13648085-6DC7-488E-8EE0-71389E3D7A96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{13648085-6DC7-488E-8EE0-71389E3D7A96}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{13648085-6DC7-488E-8EE0-71389E3D7A96}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{13648085-6DC7-488E-8EE0-71389E3D7A96}.Release|Any CPU.Build.0 = Release|Any CPU
-		{13648085-6DC7-488E-8EE0-71389E3D7A96}.UnityDebug|Any CPU.ActiveCfg = UnityDebug|Any CPU
 		{D0114CBD-4211-4106-B8E2-23BE2FDE0D53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D0114CBD-4211-4106-B8E2-23BE2FDE0D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0114CBD-4211-4106-B8E2-23BE2FDE0D53}.Release|Any CPU.ActiveCfg = Release|Any CPU

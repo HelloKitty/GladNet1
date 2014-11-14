@@ -81,6 +81,10 @@ namespace GladNet.Server
 			NetPeerConfiguration config = new NetPeerConfiguration(appName);
 			config.Port = port;
 
+			//Server needs a much larger than default buffer size because corruption can happen otherwise
+			config.ReceiveBufferSize = 500000;
+			config.SendBufferSize = 500000;
+
 			//This message type must be set to true so we can manage connections with hailmessages and so that we can
 			//reject the majority of non-malicious malformed connection attempts
 			config.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
@@ -166,6 +170,7 @@ namespace GladNet.Server
 
 				//Add in all the custom packets the server uses.
 				RegisterProtobufPackets(Packet.Register);
+				Packet.SetupProtoRuntimePacketInheritance();
 				Packet.LockInProtobufnet();
 
 				lidgrenServerObj.Start();
@@ -291,7 +296,10 @@ namespace GladNet.Server
 			LidgrenTransferPacket transferPacket = null;
 			try
 			{
-				transferPacket = Serializer<ProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(msg.Data);
+				//Due to message recycling we cannot trust the internal array of data to be of only the information that should be used for this package.
+				//We can trust the indicates size, not the length of .Data, and get a byte[] that represents the sent LidgrenTransferPacket.
+				//However, this will incur a GC penalty which may become an issue; more likely to be an issue on clients.
+				transferPacket = Serializer<ProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
 			}
 			catch (LoggableException e)
 			{

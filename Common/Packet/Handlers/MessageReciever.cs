@@ -55,6 +55,9 @@ namespace GladNet.Common
 		internal T GeneratePackage<T>(LidgrenTransferPacket packet)
 			where T : NetworkPackage, new()
 		{
+			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
+				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
+
 			return Converter.BuildIncomingNetPackage<T>(packet, SerializerRegister.GetValue(packet.SerializerKey));
 		}
 	}

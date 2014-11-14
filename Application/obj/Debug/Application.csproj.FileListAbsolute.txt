@@ -19,3 +19,7 @@ C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Applicatio
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Application\bin\Debug\protobuf-net.pdb
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Application\bin\Debug\protobuf-net.xml
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\bin\Debug\Application.exe
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\obj\Debug\Application.exe
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\obj\Debug\Application.pdb
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\bin\Debug\Application.exe.config
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Application\bin\Debug\Application.pdb

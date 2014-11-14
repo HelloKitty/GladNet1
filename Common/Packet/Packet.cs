@@ -89,7 +89,7 @@ namespace GladNet.Common
 
 		internal static DeliveryMethod LidgrenDeliveryMethodConvert(NetDeliveryMethod method)
 		{
-			switch(method)
+			switch (method)
 			{
 				case NetDeliveryMethod.ReliableOrdered:
 					return DeliveryMethod.ReliableOrdered;
@@ -113,16 +113,16 @@ namespace GladNet.Common
 			{
 				case DeliveryMethod.ReliableOrdered:
 					return NetDeliveryMethod.ReliableOrdered;
-				
+
 				case DeliveryMethod.ReliableDiscardStale:
 					return NetDeliveryMethod.ReliableSequenced;
-			
+
 				case DeliveryMethod.ReliableUnordered:
 					return NetDeliveryMethod.ReliableUnordered;
-				
+
 				case DeliveryMethod.UnreliableAcceptDuplicate:
 					return NetDeliveryMethod.Unreliable;
-					
+
 				case DeliveryMethod.UnreliableDiscardStale:
 					return NetDeliveryMethod.UnreliableSequenced;
 				default:
@@ -131,7 +131,7 @@ namespace GladNet.Common
 		}
 
 		internal static readonly int PacketModelNumberOffset = 20;
-		
+
 		//For the love of all that is holy DO NOT touch this unless you KNOW the torment I have experienced trying to get this to work properly
 		//It may not seem like much but it's gone through many revissions, others way more complex and were tossed out in lieu of a less cool design
 		//but more reasonable.
@@ -143,7 +143,6 @@ namespace GladNet.Common
 		internal static void LockInProtobufnet()
 		{
 			//This will let the serializer know of the base packet types via PacketBase
-			RuntimeTypeModel.Default.Add(typeof(PacketBase), false).AddSubType(1, typeof(Packet));
 			RuntimeTypeModel.Default.CompileInPlace();
 		}
 
@@ -160,7 +159,7 @@ namespace GladNet.Common
 					" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.", null, Logger.LogType.Error);
 
 			if (ReferencedProtobufSubtypes.Contains(attr.UniquePacketKey))
-				throw new LoggableException("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.", 
+				throw new LoggableException("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.",
 					null, Logger.LogType.Error);
 			else
 				ReferencedProtobufSubtypes.Add(attr.UniquePacketKey);
@@ -171,12 +170,19 @@ namespace GladNet.Common
 				RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);
 			}
 			//This could happen if someone tries to register a packet after we've compiled or something
-			catch(ProtoException e)
+			catch (ProtoException e)
 			{
 				throw new LoggableException("Failed to register PacketType: " + t.FullName + " ID: " + attr.UniquePacketKey + "." +
 					" You may be trying to register it with an invalid ID or multiple times.", e, Logger.LogType.Error);
 			}
 			return true;
+		}
+
+		public static void SetupProtoRuntimePacketInheritance()
+		{
+			//Avoid adding the type twice.
+			if (RuntimeTypeModel.Default[typeof(PacketBase)].GetSubtypes().Select(x => x.FieldNumber == 1).Count() == 0)
+				RuntimeTypeModel.Default.Add(typeof(PacketBase), false).AddSubType(1, typeof(Packet));
 		}
 	}
 }

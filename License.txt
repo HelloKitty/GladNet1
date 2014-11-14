@@ -1,0 +1,34 @@
+GladNet Copyright (C) 2014 Andrew Blakely andrew.blakely@ymail.com
+
+Distribution and Derivative Works:
+
+You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+
+a. You must fully attribute to the orignal development party of GladNet as defined by this license and must acknowledge that attribution requirements are subject to change; and
+
+b. Distributions/Re-distributions must be obtainedable free of charge, that is to say it must be a non-commerial distribution/re-distribution; and
+
+c. Derivative works must be obtainedable free of charge, that is to say derivative works must be non-commerial, except if such derivative work's purpose is the direct production of a game or gameserver/gameservice; and
+
+d. The derivative work is not a Networking Library; and
+
+e. You must give any other recipients of the Work or Derivative Works a copy of this License; and
+
+f. You must cause any modified files to carry prominent notices stating that You changed the files; and
+
+g. You must not remove license comments within the source
+
+
+Attribution Requirements:
+
+Attribution for any project, non-commerial or commerial, is required if GladNet or a GladNet component is included in any part of the project. This includes cases where forward facing
+clients may not actually reference GladNet but backend components do; in this case it is still required to follow this attribution requirement.
+
+If your project contains a credits portion, or similar, then it is required that under Networking that this message must appear in the same fashion, or larger but still readable: GladNet networking library Copyright (C) 2014 Andrew Blakely
+This attribution must not be intended to be hidden or withheld from end-users. If a credit portions exists it must be reasonable accessible.
+
+If your project does not contain a credits portion then it is required in all public statements about the project that this message appear in similar fashion as stated above: Powered by GladNet networking library Copyright (C) 2014 Andrew Blakely
+
+It is required that you star on GitHub the repository. If you do not have a GitHub account, if applicable by law and GitHub's terms of service, then you must create one to do so.
+
+end of terms

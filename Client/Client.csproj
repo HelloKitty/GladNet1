@@ -41,7 +41,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Lidgren.Network">
-      <HintPath>..\..\GladNetLidgren\Lidgren.Network\bin\Release\Lidgren.Network.dll</HintPath>
+      <HintPath>..\Dependancies\Modified Lidgren gen3\Lidgren.Network\bin\Release\Lidgren.Network.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Dependancies\protobuf-net r668\Full\unity\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

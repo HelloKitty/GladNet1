@@ -1,4 +1,5 @@
-﻿using GladNet.Common;
+﻿using Common.Exceptions;
+using GladNet.Common;
 using GladNet.Server.Logging;
 using Lidgren.Network;
 using System;
@@ -52,14 +53,13 @@ namespace GladNet.Client
 			networkIncomingEnqueueSyncObj = new object();
 			internalLidgrenClient = null;
 			_isConnected = false;
-
-			//Registering the empty packet
-			Packet.Register(typeof(EmptyPacket), true);
 		}
 #else
 		public GladNetPeer(IListener listener, Logger logger)
 		{
 			RecieverListener = listener;
+			//Call the interface method to register the packets.
+			RegisterProtobufPackets(Packet.Register);
 
 			ClassLogger = logger;
 
@@ -70,9 +70,6 @@ namespace GladNet.Client
 			networkIncomingEnqueueSyncObj = new object();
 			internalLidgrenClient = null;
 			_isConnected = false;
-
-					//Registering the empty packet
-			Packet.Register(typeof(EmptyPacket), true);
 		}
 #endif
 
@@ -168,11 +165,24 @@ namespace GladNet.Client
 			{
 				msg = internalLidgrenClient.WaitMessage(10);
 
-				ServiceLidgrenMessage(msg);
+				if (msg != null)
+				{
+					try
+					{
+						ServiceLidgrenMessage(msg);
 
-				if(msg != null)
-					//Recycling the message reduces GC which can be make or break for Unity.
-					this.internalLidgrenClient.Recycle(msg);
+						//Recycling the message reduces GC which can be make or break for Unity.
+						this.internalLidgrenClient.Recycle(msg);
+					}
+					//We can catch nullreferences here without affecting exceptions external to the library
+					//This is because we have a Queue<Action> and thus we can't possibly catch the exception coming from the main thread via the lambda generated Action instance.
+					catch(NullReferenceException e)
+					{
+						//If we hit this point it generally means that the object has gone out of scope for some reason without disconnecting (usually in Unity going from playmode
+						//to the editor so at this point we should just catch it and let the application and thread die.
+						_isConnected = false;
+					}
+				}
 			}
 
 			networkThread = null;
@@ -223,7 +233,9 @@ namespace GladNet.Client
 
 		private void HandleExternalHighLevelMessage(NetIncomingMessage msg)
 		{
-			LidgrenTransferPacket transferPacket = GenerateTransferPacket(msg.Data);
+			//TODO: Investigate GC pressure of this byte[] generation. It could be hairy in Unity.
+			LidgrenTransferPacket transferPacket = GenerateTransferPacket(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
+			
 
 			if(transferPacket == null)
 			{
@@ -355,6 +367,7 @@ namespace GladNet.Client
 			}	
 		}
 
+//If we're not in unity there is no reason for a deconstructor
 #if UNITYDEBUG || UNITYRELEASE
 		//A deconstructor in C#? I too like to live dangerously...
 		//Why is this here? This exists to stop the network thread from spinnning
@@ -383,11 +396,42 @@ namespace GladNet.Client
 
 			try
 			{
+				//Registering the empty packet
+				Packet.Register(typeof(EmptyPacket), true);
+
 				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);
+				Packet.SetupProtoRuntimePacketInheritance();
+				Packet.LockInProtobufnet();
 			}
 			catch(LoggableException e)
 			{
 				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
+			}
+		}
+		
+		//TODO: Implementation encryption functionality
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+		{
+			try
+			{
+				LidgrenTransferPacket transferPacket = 
+					new LidgrenTransferPacket(Packet.OperationType.Request, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
+
+				byte[] bytes = Serializer<ProtobufNetSerializer>.Instance.Serialize(transferPacket);
+
+				NetOutgoingMessage msg = this.internalLidgrenClient.CreateMessage(bytes.Length + 1);
+
+				msg.Write((byte)255);
+				msg.Write(bytes);
+
+				return (Packet.SendResult)this.internalLidgrenClient.SendMessage(msg, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel);
+			}
+			catch(Exception e)
+			{
+				ClassLogger.LogError("SendRequest failed to execute. This could be an issue with serialization or may be the result of a null packet being sent." +
+					e.Message + (e.InnerException == null ? "" : e.InnerException.Message));
+				//It is ok to crash the application since this should only ever be the result of poor compile-time logic. No malicious party could cause this.
+				throw;
 			}
 		}
 	}
