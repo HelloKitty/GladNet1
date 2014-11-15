@@ -45,6 +45,9 @@ namespace GladNet.Client
 			get { return _isConnected; }
 		}
 
+		private double timeNowByPoll = 0;
+		private double timeNowByPollComparer = 0;
+
 #if UNITYDEBUG || UNITYRELEASE
 		public GladNetPeer(IListener listener, Logger logger = null)
 		{
@@ -96,6 +99,10 @@ namespace GladNet.Client
 					networkPackageQueue.Dequeue()();
 				}
 			}
+
+			//Sets the NetTime for the network thread to read. If it's much less then NetTime.Now then the network thread shuts down
+			//This will happen if we don't poll often.
+			Interlocked.Exchange(ref timeNowByPoll, NetTime.Now);
 
 			if (_isConnected == false)
 			{
@@ -178,7 +185,20 @@ namespace GladNet.Client
 			{
 				while (_isConnected)
 				{
-					msg = internalLidgrenClient.WaitMessage(10);
+					msg = internalLidgrenClient.WaitMessage(20);
+
+					//TODO: May not be thread safe due to NetTime.Now
+					//This checks to see if Poll was called in the last 3 seconds. If it was not it stops the network thread basically.
+					if (Interlocked.Exchange(ref timeNowByPollComparer, timeNowByPoll) < NetTime.Now - 3)
+					{
+#if UNITYDEBUG || DEBUG
+						ClassLogger.LogDebug("Stopping network thread.");
+#endif
+						_isConnected = false;
+						if (internalLidgrenClient != null)
+							//Should be thread safe and fine to do.
+							internalLidgrenClient.Disconnect("Disconnecting");
+					}
 
 					if (msg != null)
 					{
@@ -388,27 +408,29 @@ namespace GladNet.Client
 			}	
 		}
 
-//If we're not in unity there is no reason for a deconstructor
+/*//If we're not in unity there is no reason for a deconstructor
 #if UNITYDEBUG || UNITYRELEASE
 		//A deconstructor in C#? I too like to live dangerously...
 		//Why is this here? This exists to stop the network thread from spinnning
 		//in cases where the user leaves playmode in the Unity3D editor before disconnecting.
 		~GladNetPeer()
 		{
-
 			_isConnected = false;
-			if (networkThread != null)
-				try
-				{
-					networkThread.Abort();
-				}
-				catch(Exception e)
-				{
-					//Catch anything and everything because we're in the editor and all bets are off
-				}
+			try
+			{
 
+			#if UNITYDEBUG
+				this.ClassLogger.LogDebug("Stopping network thread.");
+			#endif
+	
+				networkThread.Abort();
+			}
+			catch(Exception e)
+			{
+				//Catch anything and everything because we're in the editor and all bets are off
+			}
 		}
-#endif
+#endif*/
 
 		protected override void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
 		{

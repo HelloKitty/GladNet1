@@ -10,6 +10,8 @@
 
 [Dd]ebug/
 [Rr]elease/
+[Uu]nityDebug/
+[Uu]nitRelease/
 x64/
 build/
 [Bb]in/
