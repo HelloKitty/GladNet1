@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		ProjectHeader.licenseheader = ProjectHeader.licenseheader
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application (GUI)", "Application (GUI)\Application (GUI).csproj", "{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,12 @@ Global
 		{FB587A33-3888-4296-8C32-DE9D175AB11F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FB587A33-3888-4296-8C32-DE9D175AB11F}.UnityDebug|Any CPU.ActiveCfg = UnityDebug|Any CPU
 		{FB587A33-3888-4296-8C32-DE9D175AB11F}.UnityDebug|Any CPU.Build.0 = UnityDebug|Any CPU
+		{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}.UnityDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2C58D3D-0FB1-4B46-87F7-D0E3E3D2D348}.UnityDebug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
