@@ -17,6 +17,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csp
 		{D0114CBD-4211-4106-B8E2-23BE2FDE0D53} = {D0114CBD-4211-4106-B8E2-23BE2FDE0D53}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CDBDB836-17CB-479D-8D39-F504420FDC36}"
+	ProjectSection(SolutionItems) = preProject
+		ProjectHeader.licenseheader = ProjectHeader.licenseheader
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
