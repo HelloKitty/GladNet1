@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: InternalsVisibleTo("Server", AllInternalsVisible = true)]
-[assembly: InternalsVisibleTo("Lidgren Client Test", AllInternalsVisible=true)]
 [assembly: InternalsVisibleTo("Client", AllInternalsVisible=true)]
 [assembly: AssemblyTitle("Common")]
 [assembly: AssemblyDescription("")]

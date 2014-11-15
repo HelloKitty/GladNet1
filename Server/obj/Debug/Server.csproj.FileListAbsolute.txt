@@ -12,7 +12,6 @@ C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\bin
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\obj\Debug\Server.dll
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\obj\Debug\Server.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Server.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Server.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Common.dll
@@ -24,5 +23,6 @@ C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Lidgren.Networ
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\protobuf-net.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\protobuf-net.xml
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\System.Threading.xml
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.pdb

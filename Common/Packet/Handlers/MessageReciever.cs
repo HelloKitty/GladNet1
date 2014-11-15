@@ -10,9 +10,9 @@ namespace GladNet.Common
 	public abstract class MessageReciever
 	{
 		//These are internal because we want child classes in the assembly to have access but not child classes outside the assembly
-		internal readonly SerializationManager SerializerRegister;
+		protected readonly SerializationManager SerializerRegister;
 
-		internal readonly PacketConverter Converter;
+		protected readonly PacketConverter Converter;
 
 		public MessageReciever()
 		{
@@ -52,7 +52,7 @@ namespace GladNet.Common
 		protected abstract void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc);
 
 		//This is internal because we don't want child classes having access to it but we need some derived classes to have access.
-		internal T GeneratePackage<T>(LidgrenTransferPacket packet)
+		protected T GeneratePackage<T>(LidgrenTransferPacket packet)
 			where T : NetworkPackage, new()
 		{
 			if (SerializerRegister.GetValue(packet.SerializerKey) == null)

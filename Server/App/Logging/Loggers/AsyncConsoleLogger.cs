@@ -1,9 +1,6 @@
 ﻿using GladNet.Common;
-using GladNet.Server.Logging;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,18 +21,19 @@ namespace GladNet.Server
 		public static AsyncConsoleLogger Instance { get { return _Instance.Value; } }
 
 		private AsyncConsoleLogger() 
-			: base(Logger.LogType.Error)
+			: base(Logger.LogType.Debug)
 		{
-			BlockingQueue = new BlockingCollection<string>();
+			BlockingQueue = new BlockingCollection<string>(); 
+			
+			Task.Factory.StartNew(() =>
+			{
+				while (true) Console.WriteLine(BlockingQueue.Take());
+			}, TaskCreationOptions.LongRunning);
 		}
 
 		public void SetState(Logger.LogType newState)
 		{
 			this.LoggerState = newState;
-			Task.Factory.StartNew(() =>
-				{
-					while (true) Console.WriteLine(BlockingQueue.Take());
-				}, TaskCreationOptions.LongRunning);
 		}
 
 		protected override void Log(string text, Logger.LogType state)

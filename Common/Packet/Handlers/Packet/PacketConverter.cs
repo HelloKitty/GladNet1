@@ -9,7 +9,7 @@ using System.Text;
 namespace GladNet.Common
 {
 	//TODO: Better support for encryption
-	internal class PacketConverter
+	public class PacketConverter
 	{
 		protected PacketBase PacketConstructor(byte[] bytes, SerializerBase serializer)
 		{
@@ -32,8 +32,7 @@ namespace GladNet.Common
 					lgPacket.EncryptionMethod != 0);
 			}
 			catch (SerializationException e)
-			{
-				
+			{	
 				throw new LoggableException("Failed to deserialize package.", e, Logger.LogType.Error);
 			}
 

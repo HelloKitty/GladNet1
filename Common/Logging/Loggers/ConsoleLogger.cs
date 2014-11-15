@@ -8,15 +8,27 @@ namespace Common.Logging.Loggers
 {
 	public class ConsoleLogger : Logger
 	{
+
+	//Can't use Lazy<T> in Unity
+#if !UNITYDEBUG && !UNITYRELEASE
 		/// <summary>
 		/// Lazily loaded instance of the serializer.
 		/// </summary>
 		private static Lazy<ConsoleLogger> _Instance = new Lazy<ConsoleLogger>(() => { return new ConsoleLogger(LogType.Debug); }, true);
 
+#else
+		private static ConsoleLogger _Instance = new ConsoleLogger(LogType.Debug);
+#endif
+
+//Can't use Lazy<T> in Unity
+#if !UNITYDEBUG && !UNITYRELEASE
 		/// <summary>
 		/// Public singleton access for the serializer instance.
 		/// </summary>
 		public static ConsoleLogger Instance { get { return _Instance.Value; } }
+#else
+		public static ConsoleLogger Instance { get { return ConsoleLogger._Instance; } }
+#endif
 
 		public ConsoleLogger(LogType state)
 			: base(state)

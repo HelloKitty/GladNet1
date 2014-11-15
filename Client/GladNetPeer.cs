@@ -8,11 +8,10 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using UnityEngine;
 
 namespace GladNet.Client
 {
-	public class GladNetPeer : MessageReciever, ILoggable
+	public sealed class GladNetPeer : MessageReciever, ILoggable
 	{
 		#region Package Action Queue
 		private object networkIncomingEnqueueSyncObj;
@@ -21,8 +20,8 @@ namespace GladNet.Client
 		#endregion
 
 		#region Lidgren Network Objects
-		internal NetClient internalLidgrenClient;
-		internal NetConnection internalNetConnection;
+		private NetClient internalLidgrenClient;
+		private NetConnection internalNetConnection;
 		#endregion
 
 		public Logger ClassLogger { get; private set; }
@@ -90,7 +89,13 @@ namespace GladNet.Client
 				}
 			}
 
-			return isConnected;
+			if (_isConnected == false)
+			{
+				RecieverListener.OnStatusChange(StatusChange.Disconnected);
+				return false;
+			}
+
+			return true;
 		}
 
 
@@ -153,36 +158,45 @@ namespace GladNet.Client
 			{
 				ClassLogger.LogError("Cannot start listening before connecting.");
 
-#if !UNITYDEBUG && !UNITYRELEASE			
+#if !UNITYDEBUG && !UNITYRELEASE
+				ClassLogger.LogError("Cannot start listening before connecting.");
 				throw new NullReferenceException("Cannot start listening before connecting. Internally a client object is null.");
 #endif
-
 			}
 
 			NetIncomingMessage msg;
 
-			while(_isConnected)
+			try
 			{
-				msg = internalLidgrenClient.WaitMessage(10);
-
-				if (msg != null)
+				while (_isConnected)
 				{
-					try
-					{
-						ServiceLidgrenMessage(msg);
+					msg = internalLidgrenClient.WaitMessage(10);
 
-						//Recycling the message reduces GC which can be make or break for Unity.
-						this.internalLidgrenClient.Recycle(msg);
-					}
-					//We can catch nullreferences here without affecting exceptions external to the library
-					//This is because we have a Queue<Action> and thus we can't possibly catch the exception coming from the main thread via the lambda generated Action instance.
-					catch(NullReferenceException e)
+					if (msg != null)
 					{
-						//If we hit this point it generally means that the object has gone out of scope for some reason without disconnecting (usually in Unity going from playmode
-						//to the editor so at this point we should just catch it and let the application and thread die.
-						_isConnected = false;
+						try
+						{
+							ServiceLidgrenMessage(msg);
+
+							//Recycling the message reduces GC which can be make or break for Unity.
+							this.internalLidgrenClient.Recycle(msg);
+						}
+						//We can catch nullreferences here without affecting exceptions external to the library
+						//This is because we have a Queue<Action> and thus we can't possibly catch the exception coming from the main thread via the lambda generated Action instance.
+						catch (NullReferenceException e)
+						{
+							ClassLogger.LogError("Error occurred during polling: " + e.Message);
+							//If we hit this point it generally means that the object has gone out of scope for some reason without disconnecting (usually in Unity going from playmode
+							//to the editor so at this point we should just catch it and let the application and thread die.
+							_isConnected = false;
+						}
 					}
 				}
+			}
+			catch(Exception e)
+			{
+				ClassLogger.LogError(e.Message + e.Data);
+				throw;
 			}
 
 			networkThread = null;
@@ -235,7 +249,6 @@ namespace GladNet.Client
 		{
 			//TODO: Investigate GC pressure of this byte[] generation. It could be hairy in Unity.
 			LidgrenTransferPacket transferPacket = GenerateTransferPacket(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
-			
 
 			if(transferPacket == null)
 			{
@@ -312,7 +325,7 @@ namespace GladNet.Client
 					break;
 				case NetConnectionStatus.Disconnected:
 					//We need to let the main thread modify the value of _isConnected so that the final status change message will be polled.
-					networkPackageQueue.Enqueue(() => { _isConnected = false; RecieverListener.OnStatusChange(StatusChange.Disconnected); });
+					networkPackageQueue.Enqueue(() => { _isConnected = false; });
 					//QueueStatusChange(StatusChange.Disconnected);
 					break;
 				case NetConnectionStatus.InitiatedConnect:
@@ -392,7 +405,10 @@ namespace GladNet.Client
 		protected override void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
 		{
 			if (RecieverListener == null)
+			{
 				ClassLogger.LogError("The IListener instance passed in on connection is a null reference.");
+				return;
+			}
 
 			try
 			{

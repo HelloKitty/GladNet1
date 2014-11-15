@@ -8,7 +8,7 @@ namespace GladNet.Common
 {
 	//TODO: Mark internal after testing.
 	[ProtoContract]
-	internal class LidgrenTransferPacket
+	public class LidgrenTransferPacket
 	{
 		[ProtoMember(1, IsRequired = true)]
 		private byte[] internalHighLevelMessageRepresentation;
@@ -53,8 +53,8 @@ namespace GladNet.Common
 
 			_OperationType = (byte)opType;
 			encryptionMethod = EncryptionMethod;
-			
-			PacketCode = PacketCode;
+
+			PacketCode = packetCode;
 		}
 
 		public byte[] GetInternalBytes()

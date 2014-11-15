@@ -8,7 +8,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace GladNet.Common
 {
@@ -53,6 +52,8 @@ namespace GladNet.Common
 
 		internal static IList<int> ReferencedProtobufSubtypes = new List<int>();
 
+		internal static IList<Type> KnownPacketTypes = new List<Type>();
+
 		//Make this public to anticipate Webplayer use
 		/// <summary>
 		/// Protobuf-net parameterless constructor
@@ -63,7 +64,7 @@ namespace GladNet.Common
 
 		}
 
-		internal enum OperationType : byte
+		public enum OperationType : byte
 		{
 			Event = 0,
 			Request = 1,
@@ -87,7 +88,12 @@ namespace GladNet.Common
 			Dropped = 3,
 		}
 
+#if UNITYDEBUG || UNITYRELEASE
+		//This must be public. Unity did not like for it to be internal.
+		public static DeliveryMethod LidgrenDeliveryMethodConvert(NetDeliveryMethod method)
+#else
 		internal static DeliveryMethod LidgrenDeliveryMethodConvert(NetDeliveryMethod method)
+#endif
 		{
 			switch (method)
 			{
@@ -106,8 +112,11 @@ namespace GladNet.Common
 					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, Logger.LogType.Error);
 			}
 		}
-
+#if UNITYDEBUG || UNITYRELEASE
+		public static NetDeliveryMethod LidgrenDeliveryMethodConvert(DeliveryMethod method)
+#else
 		internal static NetDeliveryMethod LidgrenDeliveryMethodConvert(DeliveryMethod method)
+#endif
 		{
 			switch (method)
 			{
@@ -140,14 +149,18 @@ namespace GladNet.Common
 			return Register(t, false);
 		}
 
-		internal static void LockInProtobufnet()
+		public static void LockInProtobufnet()
 		{
 			//This will let the serializer know of the base packet types via PacketBase
 			RuntimeTypeModel.Default.CompileInPlace();
 		}
 
-		internal static bool Register(Type t, bool isInternal)
+		public static bool Register(Type t, bool isInternal)
 		{
+			//Just return if the packet type is already known.
+			if (KnownPacketTypes.Contains(t))
+				return false;
+
 			PacketAttribute attr = t.GetCustomAttributes(false).FirstOrDefault(x => x.GetType() == typeof(PacketAttribute)) as PacketAttribute;
 
 			if (attr == null)
@@ -168,6 +181,7 @@ namespace GladNet.Common
 			{
 				//The crown jewel.
 				RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);
+				KnownPacketTypes.Add(t);
 			}
 			//This could happen if someone tries to register a packet after we've compiled or something
 			catch (ProtoException e)

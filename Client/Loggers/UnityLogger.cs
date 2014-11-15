@@ -38,30 +38,30 @@ namespace GladNet.Client
 		protected override void Log(string text, Logger.LogType state, params object[] data)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
-			builder.Append(": ").Append(text);
+			builder.Append(": ").AppendFormat(text, data);
 
 			switch(state)
 			{
 				case LogType.Debug:
-					Debug.LogFormat(builder.ToString(), data);
+					Debug.Log(builder.ToString());
 					break;
 				case LogType.Warn:
-					Debug.LogWarningFormat(builder.ToString(), data);
+					Debug.LogWarning(builder.ToString());
 					break;
 				case LogType.Error:
-					Debug.LogErrorFormat(builder.ToString(), data);
+					Debug.LogError(builder.ToString());
 					break;
 			}
 		}
 
-		protected override void Log(string text, Logger.LogType state, string[] data)
+		protected override void Log(string text, Logger.LogType state, params string[] data)
 		{
-			throw new NotImplementedException();
+			this.Log(text, state, (object[])data);
 		}
 
 		protected override void Log(object obj, Logger.LogType state)
 		{
-			throw new NotImplementedException();
+			this.Log((string)(obj == null ? "[NULL]" : obj.ToString()), state);
 		}
 	}
 #endif
