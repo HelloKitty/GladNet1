@@ -16,7 +16,9 @@ e. You must give any other recipients of the Work or Derivative Works a copy of 
 
 f. You must cause any modified files to carry prominent notices stating that You changed the files; and
 
-g. You must not remove license comments within the source
+g. You must not remove license comments within the source; and
+
+h. It must not be re-distributed or distributed under another name as your own networking library or implying you authored the library
 
 
 Attribution Requirements:
