@@ -188,7 +188,7 @@ namespace GladNet.Common
 			try
 			{
 				//The crown jewel.
-				RuntimeTypeModel.Default.Add(typeof(Packet), false).AddSubType(attr.UniquePacketKey, t);
+				RuntimeTypeModel.Default.Add(typeof(Packet), true).AddSubType(attr.UniquePacketKey, t);
 				KnownPacketTypes.Add(t);
 			}
 			//This could happen if someone tries to register a packet after we've compiled or something
@@ -203,8 +203,8 @@ namespace GladNet.Common
 		public static void SetupProtoRuntimePacketInheritance()
 		{
 			//Avoid adding the type twice.
-			if (RuntimeTypeModel.Default[typeof(PacketBase)].GetSubtypes().Select(x => x.FieldNumber == 1).Count() == 0)
-				RuntimeTypeModel.Default.Add(typeof(PacketBase), false).AddSubType(1, typeof(Packet));
+			if (RuntimeTypeModel.Default[typeof(PacketBase)].GetSubtypes().Select(x => x.DerivedType.Name.Contains("Packet")).Count() == 0)
+				RuntimeTypeModel.Default.Add(typeof(PacketBase), true).AddSubType(1, typeof(Packet));
 		}
 	}
 }

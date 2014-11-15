@@ -445,8 +445,8 @@ namespace GladNet.Client
 				//Registering the empty packet
 				Packet.Register(typeof(EmptyPacket), true);
 
-				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);
 				Packet.SetupProtoRuntimePacketInheritance();
+				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);	
 				Packet.LockInProtobufnet();
 			}
 			catch(LoggableException e)
