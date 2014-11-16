@@ -74,7 +74,7 @@ namespace GladNet.Client
 			ClassLogger = logger;
 
 			//This registers the default serializer
-			this.SerializerRegister.Register(Serializer<ProtobufNetSerializer>.Instance, Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey);
+			this.SerializerRegister.Register(Serializer<GladNetProtobufNetSerializer>.Instance, Serializer<GladNetProtobufNetSerializer>.Instance.SerializerUniqueKey);
 
 			networkPackageQueue = new Queue<Action>(20);
 			networkIncomingEnqueueSyncObj = new object();
@@ -335,7 +335,7 @@ namespace GladNet.Client
 		{
 			try
 			{
-				return Serializer<ProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(bytes);
+				return Serializer<GladNetProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(bytes);
 			}
 			catch (LoggableException e)
 			{
@@ -463,7 +463,7 @@ namespace GladNet.Client
 				LidgrenTransferPacket transferPacket = 
 					new LidgrenTransferPacket(Packet.OperationType.Request, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
 
-				byte[] bytes = Serializer<ProtobufNetSerializer>.Instance.Serialize(transferPacket);
+				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
 
 				NetOutgoingMessage msg = this.internalLidgrenClient.CreateMessage(bytes.Length + 1);
 

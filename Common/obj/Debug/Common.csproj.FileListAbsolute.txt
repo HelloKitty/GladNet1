@@ -21,5 +21,6 @@ C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\bin\Debug\Lidgren.Networ
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\bin\Debug\protobuf-net.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\bin\Debug\protobuf-net.xml
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\bin\Debug\System.Threading.xml
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\obj\Debug\Common.csprojResolveAssemblyReference.cache
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\obj\Debug\Common.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Common\obj\Debug\Common.pdb
