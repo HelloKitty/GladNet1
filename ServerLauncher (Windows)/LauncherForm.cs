@@ -2,6 +2,7 @@
 using GladNet.Server.Common;
 using ServerLauncher.Pure_Code;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,7 +22,7 @@ namespace Application__GUI_
 		private ConfigGenerator configGenerator = null;
 
 		Dictionary<string, ConfigInformation> ConfigDictionary = new Dictionary<string, ConfigInformation>();
-		Dictionary<int, ServerProcess> ServerProcesses = new Dictionary<int, ServerProcess>();
+		ConcurrentDictionary<int, ServerProcess> ServerProcesses = new ConcurrentDictionary<int, ServerProcess>();
 
 		public MainForm()
 		{
@@ -127,25 +128,64 @@ namespace Application__GUI_
 			var listItem = this.configList.SelectedItems[0];
 			string configKey = listItem.Text;
 
+			StartServer(configKey);
+		}
+
+		private void StartServer(string configKey)
+		{
 			//Should exist
 			ConfigInformation info = this.ConfigDictionary[configKey];
 
 			ServerProcess sProcess = new ServerProcess("ServerLoader.exe", info);
 
-			this.ServerProcesses.Add(sProcess.UniqueProcessID, sProcess);
+			//Remove the sever process from the process list on exited.
+			sProcess.OnExited += () =>
+			{		
+				StopServerProcess(sProcess);
+				ServerProcess proc;
+				ServerProcesses.TryRemove(sProcess.UniqueProcessID, out proc);
+				this.UpdateProcessList();
+			};
+
+			this.ServerProcesses.TryAdd(sProcess.UniqueProcessID, sProcess);
+			this.UpdateProcessList();
 		}
 
-		private void RegisterServerProcess(Process process, string configKey)
+		private void UpdateProcessList()
 		{
+			this.runningServerList.Items.Clear();
 
+			if(ServerProcesses.Count != 0)
+				foreach(var kp in ServerProcesses)
+				{
+					runningServerList.Items.Add(kp.Value.UniqueProcessID + ": " + kp.Value.Config.DLLName);
+				}
 		}
 
 		private void button2_Click(object sender, EventArgs e)
 		{
-			foreach(var kp in ServerProcesses)
+			for(int i = 0; i < configList.Items.Count; i++)
 			{
-				kp.Value.ShutdownServer();
+				StartServer(configList.Items[i].Text);
 			}
+		}
+
+		private void stopAllButton_Click(object sender, EventArgs e)
+		{
+			foreach(var kp in this.ServerProcesses)
+			{
+				StopServerProcess(kp.Value);
+			}
+
+			ServerProcesses.Clear();
+			//Obviously don't modifiy the dictionary while enumerating i
+			this.UpdateProcessList();
+		}
+
+		private void StopServerProcess(ServerProcess process)
+		{
+			process.ShutdownServer();
+			process.Dispose();
 		}
 	}
 }

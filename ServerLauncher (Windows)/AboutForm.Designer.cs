@@ -119,7 +119,9 @@
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.GithubLink);
 			this.Controls.Add(this.pictureBox1);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
 			this.Name = "AboutForm";
+			this.ShowIcon = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "About";
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();

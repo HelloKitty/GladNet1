@@ -39,14 +39,16 @@
 			this.customizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.contentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
 			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.ConfigFileOpenDialog = new System.Windows.Forms.OpenFileDialog();
 			this.configList = new System.Windows.Forms.ListView();
 			this.label1 = new System.Windows.Forms.Label();
 			this.button1 = new System.Windows.Forms.Button();
-			this.button2 = new System.Windows.Forms.Button();
+			this.startAllButton = new System.Windows.Forms.Button();
+			this.stopAllButton = new System.Windows.Forms.Button();
+			this.stopSelectedButton = new System.Windows.Forms.Button();
+			this.label2 = new System.Windows.Forms.Label();
+			this.runningServerList = new System.Windows.Forms.ListView();
 			this.menuStrip1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -129,28 +131,15 @@
 			// helpToolStripMenuItem
 			// 
 			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.contentsToolStripMenuItem,
-            this.toolStripSeparator5,
             this.aboutToolStripMenuItem});
 			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
 			this.helpToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
 			this.helpToolStripMenuItem.Text = "&Help";
 			// 
-			// contentsToolStripMenuItem
-			// 
-			this.contentsToolStripMenuItem.Name = "contentsToolStripMenuItem";
-			this.contentsToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
-			this.contentsToolStripMenuItem.Text = "&Contents";
-			// 
-			// toolStripSeparator5
-			// 
-			this.toolStripSeparator5.Name = "toolStripSeparator5";
-			this.toolStripSeparator5.Size = new System.Drawing.Size(115, 6);
-			// 
 			// aboutToolStripMenuItem
 			// 
 			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(118, 22);
+			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
 			this.aboutToolStripMenuItem.Text = "&About...";
 			this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
 			// 
@@ -192,27 +181,75 @@
 			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.button1_Click);
 			// 
-			// button2
+			// startAllButton
 			// 
-			this.button2.Location = new System.Drawing.Point(398, 299);
-			this.button2.Name = "button2";
-			this.button2.Size = new System.Drawing.Size(92, 32);
-			this.button2.TabIndex = 4;
-			this.button2.Text = "Start All";
-			this.button2.UseVisualStyleBackColor = true;
-			this.button2.Click += new System.EventHandler(this.button2_Click);
+			this.startAllButton.Location = new System.Drawing.Point(398, 299);
+			this.startAllButton.Name = "startAllButton";
+			this.startAllButton.Size = new System.Drawing.Size(92, 32);
+			this.startAllButton.TabIndex = 4;
+			this.startAllButton.Text = "Start All";
+			this.startAllButton.UseVisualStyleBackColor = true;
+			this.startAllButton.Click += new System.EventHandler(this.button2_Click);
+			// 
+			// stopAllButton
+			// 
+			this.stopAllButton.Location = new System.Drawing.Point(118, 299);
+			this.stopAllButton.Name = "stopAllButton";
+			this.stopAllButton.Size = new System.Drawing.Size(92, 32);
+			this.stopAllButton.TabIndex = 8;
+			this.stopAllButton.Text = "Stop All";
+			this.stopAllButton.UseVisualStyleBackColor = true;
+			this.stopAllButton.Click += new System.EventHandler(this.stopAllButton_Click);
+			// 
+			// stopSelectedButton
+			// 
+			this.stopSelectedButton.Location = new System.Drawing.Point(12, 299);
+			this.stopSelectedButton.Name = "stopSelectedButton";
+			this.stopSelectedButton.Size = new System.Drawing.Size(92, 32);
+			this.stopSelectedButton.TabIndex = 7;
+			this.stopSelectedButton.Text = "Stop Selected";
+			this.stopSelectedButton.UseVisualStyleBackColor = true;
+			// 
+			// label2
+			// 
+			this.label2.AutoSize = true;
+			this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F);
+			this.label2.Location = new System.Drawing.Point(6, 44);
+			this.label2.Name = "label2";
+			this.label2.Size = new System.Drawing.Size(216, 31);
+			this.label2.TabIndex = 6;
+			this.label2.Text = "Running Servers";
+			// 
+			// runningServerList
+			// 
+			this.runningServerList.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+			this.runningServerList.LabelWrap = false;
+			this.runningServerList.Location = new System.Drawing.Point(12, 89);
+			this.runningServerList.MultiSelect = false;
+			this.runningServerList.Name = "runningServerList";
+			this.runningServerList.Size = new System.Drawing.Size(198, 204);
+			this.runningServerList.TabIndex = 5;
+			this.runningServerList.UseCompatibleStateImageBehavior = false;
+			this.runningServerList.View = System.Windows.Forms.View.List;
 			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(502, 386);
-			this.Controls.Add(this.button2);
+			this.Controls.Add(this.stopAllButton);
+			this.Controls.Add(this.stopSelectedButton);
+			this.Controls.Add(this.label2);
+			this.Controls.Add(this.runningServerList);
+			this.Controls.Add(this.startAllButton);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.configList);
 			this.Controls.Add(this.menuStrip1);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+			this.MaximizeBox = false;
 			this.Name = "MainForm";
+			this.ShowIcon = false;
 			this.Text = "Server Launcher";
 			this.menuStrip1.ResumeLayout(false);
 			this.menuStrip1.PerformLayout();
@@ -233,14 +270,16 @@
 		private System.Windows.Forms.ToolStripMenuItem customizeToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem contentsToolStripMenuItem;
-		private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
 		private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
 		private System.Windows.Forms.OpenFileDialog ConfigFileOpenDialog;
 		private System.Windows.Forms.ListView configList;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.Button button1;
-		private System.Windows.Forms.Button button2;
+		private System.Windows.Forms.Button startAllButton;
+		private System.Windows.Forms.Button stopAllButton;
+		private System.Windows.Forms.Button stopSelectedButton;
+		private System.Windows.Forms.Label label2;
+		private System.Windows.Forms.ListView runningServerList;
 
 
 

@@ -15,23 +15,15 @@ namespace ServerLauncher.Pure_Code
 {
 	public class ServerProcess : IDisposable
 	{
+		//These all need to be non static as it doesn't broadcast.
+		//Data it sends is first come first serve off the handle
+		private readonly AnonymousPipeServerStream serverBroadcastingPipe;
 
-		private static Lazy<AnonymousPipeServerStream> _serverBroadcastingPipe =
-			new Lazy<AnonymousPipeServerStream>(ServerProcess.ConstructServerStream, true);
-
-		private static AnonymousPipeServerStream serverBroadcastingPipe
-		{
-			get { return _serverBroadcastingPipe.Value; }
-		}
-
-		private static AnonymousPipeServerStream ConstructServerStream()
-		{
-			return new AnonymousPipeServerStream(PipeDirection.Out, System.IO.HandleInheritability.Inheritable);
-		}
-
-		private static StreamWriter serverStreamWriter = new StreamWriter(serverBroadcastingPipe);
+		private readonly StreamWriter serverStreamWriter;
 
 		public ConfigInformation Config { get; private set; }
+
+		public Action OnExited;
 
 		private readonly Process ApplicationProcess;
 
@@ -40,31 +32,45 @@ namespace ServerLauncher.Pure_Code
 			get { return ApplicationProcess.WorkingSet64; }
 		}
 
-		public int UniqueProcessID
-		{
-			get { return ApplicationProcess.Id; }
-		}
+		public int UniqueProcessID { get; private set; }
 
 		//DLLNAME APPNAME HAILMESSAGE PORT PIPEHANDLE
 		public ServerProcess(string path, ConfigInformation info)
 		{
+			serverBroadcastingPipe = 
+			new AnonymousPipeServerStream(PipeDirection.Out, System.IO.HandleInheritability.Inheritable);
+
+			serverStreamWriter = new StreamWriter(serverBroadcastingPipe);
+
 			try
 			{
 				Config = info;
-				string clientString = ServerProcess.serverBroadcastingPipe.GetClientHandleAsString();
+				string clientString = serverBroadcastingPipe.GetClientHandleAsString();
 
 				ApplicationProcess = Process.Start(new ProcessStartInfo()
 				{
 					Arguments = Config.DLLName + " " + Config.ApplicationName + " " + Config.HailMessage + " " +
 					Config.Port.ToString() + " " + clientString,
-					UseShellExecute = true,
+					UseShellExecute = false,
 					FileName = path
 				});
+
+				UniqueProcessID = ApplicationProcess.Id;
+
+				ApplicationProcess.EnableRaisingEvents = true;
+
+				ApplicationProcess.Exited += new EventHandler(OnExit);
 			}
 			catch(NullReferenceException e)
 			{
 				MessageBox.Show(e.Message + " " + e.Data + e.StackTrace);
 			}
+		}
+
+		private void OnExit(object o, EventArgs e)
+		{
+			if (OnExited != null)
+				OnExited();
 		}
 
 		public void ShutdownServer()
@@ -76,6 +82,8 @@ namespace ServerLauncher.Pure_Code
 		public void Dispose()
 		{
 			this.ApplicationProcess.Dispose();
+			this.serverStreamWriter.Dispose();
+			this.serverBroadcastingPipe.Dispose();
 		}
 	}
 }
