@@ -36,8 +36,6 @@
 			this.hailMessageText = new System.Windows.Forms.TextBox();
 			this.applicationNameText = new System.Windows.Forms.TextBox();
 			this.listenPortText = new System.Windows.Forms.TextBox();
-			this.passwordText = new System.Windows.Forms.TextBox();
-			this.label5 = new System.Windows.Forms.Label();
 			this.button1 = new System.Windows.Forms.Button();
 			this.fileNameText = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
@@ -111,23 +109,6 @@
 			this.listenPortText.Size = new System.Drawing.Size(100, 20);
 			this.listenPortText.TabIndex = 7;
 			// 
-			// passwordText
-			// 
-			this.passwordText.Location = new System.Drawing.Point(214, 155);
-			this.passwordText.Name = "passwordText";
-			this.passwordText.Size = new System.Drawing.Size(100, 20);
-			this.passwordText.TabIndex = 9;
-			// 
-			// label5
-			// 
-			this.label5.AutoSize = true;
-			this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
-			this.label5.Location = new System.Drawing.Point(12, 155);
-			this.label5.Name = "label5";
-			this.label5.Size = new System.Drawing.Size(158, 20);
-			this.label5.TabIndex = 8;
-			this.label5.Text = "Password (Will Hash)";
-			// 
 			// button1
 			// 
 			this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 13F);
@@ -164,8 +145,6 @@
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.fileNameText);
 			this.Controls.Add(this.button1);
-			this.Controls.Add(this.passwordText);
-			this.Controls.Add(this.label5);
 			this.Controls.Add(this.listenPortText);
 			this.Controls.Add(this.applicationNameText);
 			this.Controls.Add(this.hailMessageText);
@@ -195,8 +174,6 @@
 		private System.Windows.Forms.TextBox hailMessageText;
 		private System.Windows.Forms.TextBox applicationNameText;
 		private System.Windows.Forms.TextBox listenPortText;
-		private System.Windows.Forms.TextBox passwordText;
-		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.TextBox fileNameText;
 		private System.Windows.Forms.Label label6;

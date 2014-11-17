@@ -56,7 +56,7 @@ namespace GladNet.Client
 			RegisterProtobufPackets(Packet.Register);
 
 			//This registers the default serializer
-			this.SerializerRegister.Register(Serializer<ProtobufNetSerializer>.Instance, Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey);
+			this.SerializerRegister.Register(Serializer<GladNetProtobufNetSerializer>.Instance, Serializer<GladNetProtobufNetSerializer>.Instance.SerializerUniqueKey);
 
 			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
 			networkPackageQueue = new Queue<Action>(20);

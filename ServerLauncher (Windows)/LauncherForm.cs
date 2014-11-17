@@ -45,7 +45,7 @@ namespace Application__GUI_
 
 			if (r == DialogResult.OK)
 				using (Stream stream = ConfigFileOpenDialog.OpenFile())
-				{
+				{				
 					using (StreamReader reader = new StreamReader(stream))
 					{
 						string xmlString = reader.ReadToEnd();
@@ -55,7 +55,8 @@ namespace Application__GUI_
 							var config = Serializer<GladNetXmlSerializer>.Instance.
 								DeserializeFromString<ConfigInformation>(xmlString);
 
-							AddNewConfigToList(config);
+
+							AddNewConfigToList(config, ConfigFileOpenDialog.SafeFileName);
 						}
 						catch (LoggableException ee)
 						{
@@ -68,13 +69,13 @@ namespace Application__GUI_
 				MessageBox.Show(this, "Failed to open a .config file for a server.", "Open Result");
 		}
 
-		private void AddNewConfigToList(ConfigInformation config)
+		private void AddNewConfigToList(ConfigInformation config, string configFileName)
 		{
-			if (ConfigDictionary.ContainsKey(config.DLLName))
+			if (ConfigDictionary.ContainsKey(configFileName))
 				MessageBox.Show(this, "You've already loaded this config file.", "Open Result");
 			else
 			{
-				this.ConfigDictionary.Add(config.DLLName, config);
+				this.ConfigDictionary.Add(configFileName, config);
 				this.configList.Clear();
 
 				foreach(var kp in ConfigDictionary)
@@ -186,6 +187,35 @@ namespace Application__GUI_
 		{
 			process.ShutdownServer();
 			process.Dispose();
+		}
+
+		private void stopSelectedButton_Click(object sender, EventArgs e)
+		{
+			int key;
+
+			if (this.runningServerList.SelectedItems.Count == 0)
+			{
+				MessageBox.Show(this, "You need to select a server first.", "Error");
+				return;
+			}
+
+			if (!int.TryParse(this.runningServerList.SelectedItems[0].Text.Substring(0,
+				this.runningServerList.SelectedItems[0].Text.IndexOf(':')), out key))
+			{
+				MessageBox.Show(this, "Unable to get process ID. Cannot stop process.", "Error");
+				return;
+			}
+			else
+			{
+				ServerProcess process;
+				if (ServerProcesses.TryRemove(key, out process))
+				{
+					StopServerProcess(process);
+					this.UpdateProcessList();
+				}
+				else
+					MessageBox.Show(this, "Please try again; a temporary error occured.", "Error");
+			}	
 		}
 	}
 }
