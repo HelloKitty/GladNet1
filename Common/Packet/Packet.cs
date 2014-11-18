@@ -55,7 +55,7 @@ namespace GladNet.Common
 
 		protected override SerializerBase PacketSerializer
 		{
-			get { return Serializer<GladNetProtobufNetSerializer>.Instance; }
+			get { return Serializer<ProtobufNetSerializer>.Instance; }
 		}
 
 		internal static IList<int> ReferencedProtobufSubtypes = new List<int>();

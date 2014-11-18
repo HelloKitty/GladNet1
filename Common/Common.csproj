@@ -7,7 +7,7 @@
     <ProjectGuid>{D0114CBD-4211-4106-B8E2-23BE2FDE0D53}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GladNet.Common</RootNamespace>
+    <RootNamespace>Common</RootNamespace>
     <AssemblyName>Common</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -78,10 +78,9 @@
     <Compile Include="Packet\Packet.cs" />
     <Compile Include="Packet\PacketAttribute.cs" />
     <Compile Include="Packet\RegisteredPacket.cs" />
-    <Compile Include="Serializers\Implemented Serializers\GladNetXmlSerializer.cs" />
-    <Compile Include="Serializers\Implemented Serializers\GladNetProtobufNetSerializer.cs" />
-    <Compile Include="Serializers\SerializationManager.cs" />
-    <Compile Include="Serializers\Serializer.cs" />
+    <Compile Include="Packet\Serializers\ProtobufNetSerializer.cs" />
+    <Compile Include="Packet\Serializers\SerializationManager.cs" />
+    <Compile Include="Packet\Serializers\Serializer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Register\IHashContainer.cs" />
     <Compile Include="Register\IRegisterable.cs" />

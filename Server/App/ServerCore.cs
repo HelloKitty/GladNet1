@@ -18,9 +18,6 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -82,7 +79,7 @@ namespace GladNet.Server
 			UnhandledServerConnections = new List<ConnectionResponse>();
 
 			//Register the default serializer
-			this.RegisterSerializer<GladNetProtobufNetSerializer>();
+			this.RegisterSerializer<ProtobufNetSerializer>();
 
 			ClassLogger = loggerInstance;
 			Clients = new ConnectionCollection<ClientPeer, NetConnection>();
@@ -205,46 +202,6 @@ namespace GladNet.Server
 			}
 		}
 
-		public void StartPipeListener(string clientHandleString)
-		{
-#if DEBUGBUILD
-			ClassLogger.LogDebug("Started pipe listener to launcher with handle: " + clientHandleString);
-#endif
-
-			Task.Factory.StartNew(() =>
-			{
-				try
-				{
-					using (PipeStream ps = new AnonymousPipeClientStream(PipeDirection.In, clientHandleString))
-					{
-						using (StreamReader reader = new StreamReader(ps, Encoding.Default))
-						{
-							string message;
-							while (true)
-							{
-								message = reader.ReadLine();
-#if DEBUGBUILD
-								ClassLogger.LogDebug("Recieved message via Launcher pipe: " + message);
-#endif
-
-
-								if (message.Contains("[SHUTDOWN]"))
-									if (message == "[SHUTDOWN] " + Process.GetCurrentProcess().Id.ToString())
-									{
-										isReady = false;
-										break;
-									}
-							}
-						}
-					}
-				}
-				catch(Exception e)
-				{
-					ClassLogger.LogError(e.Message);
-				}
-			}, TaskCreationOptions.LongRunning);
-		}
-
 		/// <summary>
 		/// Internally called by the app when a shutdown request has been recieved.
 		/// </summary>
@@ -350,7 +307,7 @@ namespace GladNet.Server
 				//Due to message recycling we cannot trust the internal array of data to be of only the information that should be used for this package.
 				//We can trust the indicates size, not the length of .Data, and get a byte[] that represents the sent LidgrenTransferPacket.
 				//However, this will incur a GC penalty which may become an issue; more likely to be an issue on clients.
-				transferPacket = Serializer<GladNetProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
+				transferPacket = Serializer<ProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
 			}
 			catch (LoggableException e)
 			{

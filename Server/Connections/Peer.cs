@@ -66,7 +66,7 @@ namespace GladNet.Server
 			{
 				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(type, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
 
-				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
+				byte[] bytes = Serializer<ProtobufNetSerializer>.Instance.Serialize(transferPacket);
 
 				return (Packet.SendResult)this.InternalNetConnection.SendMessage(false, bytes, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel);
 			}
@@ -84,7 +84,7 @@ namespace GladNet.Server
 			{
 				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(Packet.OperationType.Event, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
 
-				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
+				byte[] bytes = Serializer<ProtobufNetSerializer>.Instance.Serialize(transferPacket);
 
 
 				//Inefficient O(n) casting to a NetConnection list. Not good.
