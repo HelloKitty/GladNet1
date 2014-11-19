@@ -60,6 +60,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Encryption\Decryptiion Methods\DiffieHellmanEncryptor.cs" />
+    <Compile Include="Encryption\EncryptionBase.cs" />
+    <Compile Include="Encryption\IEncryptable.cs" />
     <Compile Include="Exceptions\LoggableException.cs" />
     <Compile Include="Exceptions\SerializationException.cs" />
     <Compile Include="Logging\ILoggable.cs" />

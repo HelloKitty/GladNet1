@@ -27,24 +27,51 @@ namespace GladNet.Common
 				return null;
 		}
 
+		public NetworkPackageType BuildIncomingNetPackage<NetworkPackageType>(LidgrenTransferPacket lgPacket, SerializerBase serializer, EncryptionBase decrypterObject)
+			where NetworkPackageType : NetworkPackage, new()
+		{
+			if (decrypterObject != null)
+				this.DecryptIncomingPacket(lgPacket, decrypterObject);
+
+			return GenerateFromLidgrenPacket<NetworkPackageType>(lgPacket, serializer);
+		}
+
 		public NetworkPackageType BuildIncomingNetPackage<NetworkPackageType>(LidgrenTransferPacket lgPacket, SerializerBase serializer)
+			where NetworkPackageType : NetworkPackage, new()
+		{
+			return GenerateFromLidgrenPacket<NetworkPackageType>(lgPacket, serializer);
+		}
+
+		private NetworkPackageType GenerateFromLidgrenPacket<NetworkPackageType>(LidgrenTransferPacket lgPacket, SerializerBase serializer)
 			where NetworkPackageType : NetworkPackage, new()
 		{
 			NetworkPackageType package = new NetworkPackageType();
 
 			try
-			{		
+			{
 				PacketBase p = PacketConstructor(lgPacket.GetInternalBytes(), serializer);
 
 				package.FillPackage(p == null ? new MalformedPacket() : p, lgPacket.PacketCode,
-					lgPacket.EncryptionMethod != 0);
+					lgPacket.EncryptionMethodByte);
+
+				return package;
 			}
 			catch (SerializationException e)
-			{	
+			{
 				throw new LoggableException("Failed to deserialize package.", e, Logger.LogType.Error);
 			}
+		}
 
-			return package;
+		private void DecryptIncomingPacket(LidgrenTransferPacket packet, EncryptionBase decrypter)
+		{
+			if (packet.isEncrypted)
+			{
+				if (decrypter.EncryptionTypeByte == packet.EncryptionMethodByte)
+					packet.Decrypt(decrypter);
+				else
+					throw new LoggableException("Failed to decrypt byte[] blob due to decryptor object being of byte: " + decrypter.EncryptionTypeByte.ToString() +
+				" and lidgren packet encryption byte being: " + packet.EncryptionMethodByte, null, Logger.LogType.Error);
+			}
 		}
 	}
 }

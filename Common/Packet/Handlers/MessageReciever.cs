@@ -59,7 +59,17 @@ namespace GladNet.Common
 		/// <param name="registerAsDefaultFunc">The defauly packet registeration function.</param>
 		protected abstract void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc);
 
-		//This is internal because we don't want child classes having access to it but we need some derived classes to have access.
+		//(No longer internal due to Unity3D Requirements) This is internal because we don't want child classes having access to it but we need some derived classes to have access.
+		protected T GeneratePackage<T>(LidgrenTransferPacket packet, EncryptionBase decrypter)
+			where T : NetworkPackage, new()
+		{
+			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
+				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
+
+			return Converter.BuildIncomingNetPackage<T>(packet, SerializerRegister.GetValue(packet.SerializerKey), decrypter);
+		}
+
+		//(No longer internal due to Unity3D Requirements) This is internal because we don't want child classes having access to it but we need some derived classes to have access.
 		protected T GeneratePackage<T>(LidgrenTransferPacket packet)
 			where T : NetworkPackage, new()
 		{
