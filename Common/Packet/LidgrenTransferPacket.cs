@@ -55,8 +55,8 @@ namespace GladNet.Common
 			}
 			else
 			{
-				messageContents = Serializer<ProtobufNetSerializer>.Instance.Serialize(Packet.Empty);
-				serializationKey = Serializer<ProtobufNetSerializer>.Instance.SerializerUniqueKey;
+				messageContents = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(Packet.Empty);
+				serializationKey = Serializer<GladNetProtobufNetSerializer>.Instance.SerializerUniqueKey;
 			}
 
 			_OperationType = (byte)opType;
