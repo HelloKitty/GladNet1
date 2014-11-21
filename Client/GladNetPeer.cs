@@ -89,20 +89,28 @@ namespace GladNet.Client
 		/// <returns></returns>
 		public bool Poll()
 		{
-			lock (this.networkIncomingEnqueueSyncObj)
-			{
-				while (networkPackageQueue.Count != 0)
-				{
-					//Invokes the underlying Action delegate contained in the queue
-					//We don't test nullness for preformance and because it should NEVER be null
-					//A crash is likely to happen elsewhere on the logical chain leading to this being null.
-					networkPackageQueue.Dequeue()();
-				}
-			}
-
+			//We should do this as soon as Poll is called since the network thread will stop if we hold off too long
 			//Sets the NetTime for the network thread to read. If it's much less then NetTime.Now then the network thread shuts down
 			//This will happen if we don't poll often.
 			Interlocked.Exchange(ref timeNowByPoll, NetTime.Now);
+
+			Action action;
+			int count = networkPackageQueue.Count;
+
+			//We're the only ones touching the networkPackageQueue other than the producer so it shouldn't ever be
+			//consumed while we dequeue it.
+			for(int i = 0; i < count; i++)
+			{
+				lock (this.networkIncomingEnqueueSyncObj)
+				{
+					//For less locking, and for not holding the lock ALL THE WAY DOWN THE STACK like before we invoke it outside the lock down below.
+					action = networkPackageQueue.Dequeue();
+				}
+
+				//We don't test nullness for preformance and because it should NEVER be null
+				action();
+			}
+
 
 			if (_isConnected == false)
 			{
@@ -408,30 +416,6 @@ namespace GladNet.Client
 			}	
 		}
 
-/*//If we're not in unity there is no reason for a deconstructor
-#if UNITYDEBUG || UNITYRELEASE
-		//A deconstructor in C#? I too like to live dangerously...
-		//Why is this here? This exists to stop the network thread from spinnning
-		//in cases where the user leaves playmode in the Unity3D editor before disconnecting.
-		~GladNetPeer()
-		{
-			_isConnected = false;
-			try
-			{
-
-			#if UNITYDEBUG
-				this.ClassLogger.LogDebug("Stopping network thread.");
-			#endif
-	
-				networkThread.Abort();
-			}
-			catch(Exception e)
-			{
-				//Catch anything and everything because we're in the editor and all bets are off
-			}
-		}
-#endif*/
-
 		protected override void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
 		{
 			if (RecieverListener == null)
@@ -461,8 +445,10 @@ namespace GladNet.Client
 			try
 			{
 				LidgrenTransferPacket transferPacket = 
-					new LidgrenTransferPacket(Packet.OperationType.Request, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
+					new LidgrenTransferPacket(Packet.OperationType.Request, packet.SerializerKey, packetCode, packet.Serialize());
 
+
+				//TODO: Encryption tiiiiiime
 				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
 
 				NetOutgoingMessage msg = this.internalLidgrenClient.CreateMessage(bytes.Length + 1);
