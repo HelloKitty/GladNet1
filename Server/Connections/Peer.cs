@@ -64,8 +64,10 @@ namespace GladNet.Server
 		{
 			try
 			{
-				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(type, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
+				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(type, packet.SerializerKey, packetCode, packet.Serialize());
 
+
+				//TODO: encryption because it's ready
 				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
 
 				return (Packet.SendResult)this.InternalNetConnection.SendMessage(false, bytes, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel);
@@ -82,8 +84,9 @@ namespace GladNet.Server
 		{
 			try
 			{
-				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(Packet.OperationType.Event, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
+				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(Packet.OperationType.Event, packet.SerializerKey, packetCode, packet.Serialize());
 
+				//TODO: Encryption because it's ready
 				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
 
 

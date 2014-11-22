@@ -17,10 +17,10 @@ namespace GladNet.Common
 {
 	//TODO: Mark internal after testing.
 	[ProtoContract]
-	public class LidgrenTransferPacket : IEncryptable
+	public class LidgrenTransferPacket : IEncryptablePackage
 	{
 		[ProtoMember(1, IsRequired = true)]
-		private byte[] internalHighLevelMessageRepresentation;
+		public byte[] InternalByteRepresentation { get; protected set; }
 
 		[ProtoMember(2)]
 		public Packet.OperationType OperationType { get; private set; }
@@ -56,7 +56,7 @@ namespace GladNet.Common
 			//If someone chooses not to pass a packet then we'll use the empty packet.
 			if(messageContents != null)
 			{
-				internalHighLevelMessageRepresentation = messageContents;
+				InternalByteRepresentation = messageContents;
 				SerializerKey = serializationKey;
 			}
 			else
@@ -67,11 +67,6 @@ namespace GladNet.Common
 
 			OperationType = opType;
 			PacketCode = packetCode;
-		}
-
-		public byte[] GetInternalBytes()
-		{
-			return internalHighLevelMessageRepresentation;
 		}
 
 		//Protobuf-net constructor
@@ -90,9 +85,9 @@ namespace GladNet.Common
 			return builder.ToString();
 		}
 
-		public void Encrypt(EncryptionBase encryptionObject)
+		public virtual void Encrypt(EncryptionBase encryptionObject)
 		{
-			if(internalHighLevelMessageRepresentation != null)
+			if (InternalByteRepresentation != null)
 			{
 				//Sets the encryption method used via  byte so remote recievers will know how to handle the
 				//encrypted byte[]
@@ -100,7 +95,7 @@ namespace GladNet.Common
 
 				try
 				{
-					this.internalHighLevelMessageRepresentation = encryptionObject.Encrypt(internalHighLevelMessageRepresentation,
+					this.InternalByteRepresentation = encryptionObject.Encrypt(InternalByteRepresentation,
 						out _EncryptionAdditionalBlob);
 				}
 				catch (CryptographicException e)
@@ -110,16 +105,16 @@ namespace GladNet.Common
 			}
 		}
 
-		public bool Decrypt(EncryptionBase encryptionObject)
+		public virtual bool Decrypt(EncryptionBase encryptionObject)
 		{
-			if (internalHighLevelMessageRepresentation != null && EncryptionMethodByte != 0)
+			if (InternalByteRepresentation != null && EncryptionMethodByte != 0)
 			{
 				try
 				{
-					this.internalHighLevelMessageRepresentation = encryptionObject.Decrypt(internalHighLevelMessageRepresentation,
+					this.InternalByteRepresentation = encryptionObject.Decrypt(InternalByteRepresentation,
 						_EncryptionAdditionalBlob);
 
-					return this.internalHighLevelMessageRepresentation != null;
+					return this.InternalByteRepresentation != null;
 
 				}
 				catch(CryptographicException e)

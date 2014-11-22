@@ -51,12 +51,25 @@ namespace GladNet.Server
 		/// </summary>
 		public Logger ClassLogger { get; private set; }
 
-		private IList<ConnectionResponse> UnhandledServerConnections;
+		
 
 		private bool isReady = false;
 
-		public ConnectionCollection<ClientPeer, NetConnection> Clients;
-		public ConnectionCollection<ServerPeer, NetConnection> ServerConnections;
+		#region Connection collection properites and objects
+		public IReadOnlyList<ServerPeer> ServerPeers
+		{
+			get { return (List<ServerPeer>)ServerConnections; }
+		}
+
+		public IReadOnlyList<ClientPeer> ClientPeers
+		{
+			get { return (List<ClientPeer>)ServerConnections; }
+		}
+
+		private IList<ConnectionResponse> UnhandledServerConnections;
+		private IConnectionCollection<ClientPeer, NetConnection> Clients;
+		private IConnectionCollection<ServerPeer, NetConnection> ServerConnections;
+		#endregion
 
 		private readonly NetServer lidgrenServerObj;
 
@@ -205,6 +218,7 @@ namespace GladNet.Server
 			}
 		}
 
+		//TODO: Totally refactor this garbage
 		public void StartPipeListener(string clientHandleString)
 		{
 #if DEBUGBUILD
@@ -294,7 +308,7 @@ namespace GladNet.Server
 							try
 							{
 								msg.SenderConnection.Approve();
-								this.RegisterApprovedConnection(msg.SenderConnection, msg.SenderConnection.RemoteHailMessage.ReadByte());
+								this.TryRegisterApprovedConnection(msg.SenderConnection, msg.SenderConnection.RemoteHailMessage.ReadByte());
 							}
 							catch (NetException e)
 							{
@@ -362,27 +376,28 @@ namespace GladNet.Server
 				return;
 
 			if (Clients.HasKey(msg.SenderConnection.RemoteUniqueIdentifier)) //Client sent the message
-				ForwardHighlevelMessageToPeer(Clients, transferPacket, msg.SenderConnection.RemoteUniqueIdentifier);
+				ForwardHighlevelMessageToPeer(transferPacket, Clients[msg.SenderConnection.RemoteUniqueIdentifier]);
 			else if (ServerConnections.HasKey(msg.SenderConnection.RemoteUniqueIdentifier)) //Subserver sent a message
-				ForwardHighlevelMessageToPeer(ServerConnections, transferPacket, msg.SenderConnection.RemoteUniqueIdentifier);
+				ForwardHighlevelMessageToPeer(transferPacket, ServerConnections[msg.SenderConnection.RemoteUniqueIdentifier]);
 
 			//At this point the message is for nobody and we shouldn't have recieved it.
 			//In a perfect world we'd disconnect whoever sent it but we can't be sure a real client actually sent it
 			//The package could be faked so just drop it.
 		}
 
-		private void ForwardHighlevelMessageToPeer<PeerType>(ConnectionCollection<PeerType, NetConnection> connections, LidgrenTransferPacket msg, long uniquedId)
+		private void ForwardHighlevelMessageToPeer<PeerType>(LidgrenTransferPacket msg, ConnectionPair<NetConnection, PeerType> pair)
 			where PeerType : Peer
 		{
-			ConnectionPair<NetConnection, PeerType> connectionPair = connections[uniquedId];
+			//ConnectionPair<NetConnection, PeerType> connectionPair = connections[uniquedId];
 
 			//Shouldn't be null but just incase.
-			if (connectionPair == null)
+			if (pair == null)
 				return;
 
-			ProcessHigherLevelPacket(msg, connectionPair.HighlevelPeer);
+			ProcessHigherLevelPacket(msg, pair.HighlevelPeer);
 		}
 
+		//TODO: Address memory leak; not critical atm.
 		private void ReadStatusChange(NetConnectionStatus netConnectionStatus, NetConnection netConnection)
 		{
 #if DEBUGBUILD
@@ -413,15 +428,23 @@ namespace GladNet.Server
 #else
 					UnhandledServerConnections.Remove(cr);
 #endif
-					ServerPeer newPeer = this.OnConnectionSuccess(cr);
-
-					//If this is not null it means the application created a new serverpeer and it needs to be added
-					//To the collection to allow for message forwarding and such.
-					if (newPeer != null)
-						ServerConnections.Register(new ConnectionPair<NetConnection, ServerPeer>(netConnection, newPeer),
-							netConnection.RemoteUniqueIdentifier);
+					BuildServerPeer(netConnection, cr, ServerConnections);
 					break;
 			}
+		}
+
+		private ServerPeer BuildServerPeer(NetConnection netConnection, ConnectionResponse response, 
+			IRegisterable<ConnectionPair<NetConnection, ServerPeer>, long> serverRegistery)
+		{
+			ServerPeer newPeer = this.OnConnectionSuccess(response);
+
+			//If this is not null it means the application created a new serverpeer and it needs to be added
+			//To the collection to allow for message forwarding and such.
+			if (newPeer != null)
+				serverRegistery.Register(new ConnectionPair<NetConnection, ServerPeer>(netConnection, newPeer),
+					netConnection.RemoteUniqueIdentifier);
+
+			return newPeer;
 		}
 
 		private void ReadStatusChange<PeerType>(NetConnectionStatus status, ConnectionPair<NetConnection, PeerType> peerPair)
@@ -461,10 +484,11 @@ namespace GladNet.Server
 			ClassLogger.LogDebug("Handling higherlevel packet. OperationType: " + ((Packet.OperationType)packet.OperationType).ToString() + " Serialization ID: " 
 				+ packet.SerializerKey);
 #endif
-
+			//TODO: Handle encrypted packages.
 			try
 			{
-				if (SerializerRegister.HasKey(packet.SerializerKey))
+
+				if (this.SerializerIsKnown(packet.SerializerKey))
 					//TODO: Refactor
 					switch ((Packet.OperationType)packet.OperationType)
 					{
@@ -506,7 +530,7 @@ namespace GladNet.Server
 			}
 		}
 
-		private void RegisterApprovedConnection(NetConnection netConnection, byte connectionType)
+		private bool TryRegisterApprovedConnection(NetConnection netConnection, byte connectionType)
 		{
 			ClientPeer cp = OnAttemptedConnection(new ConnectionRequest(netConnection.RemoteEndPoint, netConnection.RemoteUniqueIdentifier, 
 				netConnection, connectionType));
@@ -519,10 +543,12 @@ namespace GladNet.Server
 #if DEBUGBUILD
 				ClassLogger.LogDebug("Adding new client to ConnectionCollection. ID: " + cp.UniqueConnectionId);
 #endif
-				Clients.Register(new ConnectionPair<NetConnection, ClientPeer>(netConnection, cp), netConnection.RemoteUniqueIdentifier);
+				return Clients.Register(new ConnectionPair<NetConnection, ClientPeer>(netConnection, cp), netConnection.RemoteUniqueIdentifier);
 			}
 			else
 				ClassLogger.LogError("cp is null");
+
+			return false;
 		}
 	}
 }

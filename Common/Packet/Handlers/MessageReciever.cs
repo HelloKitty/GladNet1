@@ -17,10 +17,9 @@ namespace GladNet.Common
 {
 	public abstract class MessageReciever
 	{
-		//These are internal because we want child classes in the assembly to have access but not child classes outside the assembly
-		protected readonly SerializationManager SerializerRegister;
+		private readonly IRegisterable<SerializerBase, byte> SerializerRegister;
 
-		protected readonly PacketConverter Converter;
+		private readonly IPacketConverter Converter;
 
 		public MessageReciever()
 		{
@@ -32,6 +31,13 @@ namespace GladNet.Common
 			Converter = new PacketConverter();
 		}
 
+		public MessageReciever(IRegisterable<SerializerBase, byte> serializerRegister, IPacketConverter converter)
+		{
+			this.SerializerRegister = serializerRegister;
+			Converter = converter;
+		}
+
+		#region Methods that hide the implementation of the serializer registery from base classes
 		/// <summary>
 		/// Provides a method for users to register their own serializer with the networking. This will create a handler to handle packet serialized with the serializer
 		/// as long as the reciever also register the serializer too.
@@ -45,6 +51,17 @@ namespace GladNet.Common
 
 			return this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey);
 		}
+
+		public bool SerializerIsKnown(byte key)
+		{
+			return this.SerializerRegister.HasKey(key);
+		}
+
+		public SerializerBase GetSerializer(byte key)
+		{
+			return this.SerializerRegister[key];
+		}
+		#endregion
 
 		public bool RegisterProtobufPacket(Type t)
 		{
@@ -60,23 +77,23 @@ namespace GladNet.Common
 		protected abstract void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc);
 
 		//(No longer internal due to Unity3D Requirements) This is internal because we don't want child classes having access to it but we need some derived classes to have access.
-		protected T GeneratePackage<T>(LidgrenTransferPacket packet, EncryptionBase decrypter)
-			where T : NetworkPackage, new()
+		protected PackageType GeneratePackage<PackageType, T>(IEncryptablePackage packet, EncryptionBase decrypter)
+			where PackageType : NetworkPackage, new()
 		{
 			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
 				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
 
-			return Converter.BuildIncomingNetPackage<T>(packet, SerializerRegister.GetValue(packet.SerializerKey), decrypter);
+			return Converter.Convert<PackageType>(packet, SerializerRegister[packet.SerializerKey], decrypter);
 		}
 
 		//(No longer internal due to Unity3D Requirements) This is internal because we don't want child classes having access to it but we need some derived classes to have access.
-		protected T GeneratePackage<T>(LidgrenTransferPacket packet)
-			where T : NetworkPackage, new()
+		protected PackageType GeneratePackage<PackageType>(IPackage packet)
+			where PackageType : NetworkPackage, new()
 		{
 			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
 				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
 
-			return Converter.BuildIncomingNetPackage<T>(packet, SerializerRegister.GetValue(packet.SerializerKey));
+			return Converter.Convert<PackageType>(packet, SerializerRegister[packet.SerializerKey]);
 		}
 	}
 }
