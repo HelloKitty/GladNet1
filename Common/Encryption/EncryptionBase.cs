@@ -38,5 +38,7 @@ namespace GladNet.Common
 		/// <param name="additionalBytes">Addtional bytes that the encryption method may require.</param>
 		/// <returns>Returns a decrypted byte[] (toDecrypt may already be decrypted itself)</returns>
 		public abstract byte[] Decrypt(byte[] toDecrypt, byte[] additionalBytes);
+
+		public abstract byte[] NetworkInitRequiredData();
 	}
 }

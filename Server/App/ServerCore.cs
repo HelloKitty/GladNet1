@@ -66,9 +66,9 @@ namespace GladNet.Server
 			get { return (List<ClientPeer>)ServerConnections; }
 		}
 
-		private IList<ConnectionResponse> UnhandledServerConnections;
-		private IConnectionCollection<ClientPeer, NetConnection> Clients;
-		private IConnectionCollection<ServerPeer, NetConnection> ServerConnections;
+		private readonly IList<ConnectionResponse> UnhandledServerConnections;
+		private readonly IConnectionCollection<ClientPeer, NetConnection> Clients;
+		private readonly IConnectionCollection<ServerPeer, NetConnection> ServerConnections;
 		#endregion
 
 		private readonly NetServer lidgrenServerObj;
@@ -394,7 +394,70 @@ namespace GladNet.Server
 			if (pair == null)
 				return;
 
-			ProcessHigherLevelPacket(msg, pair.HighlevelPeer);
+			if (!msg.isEncrypted)
+				DispatchPacket(msg, pair.HighlevelPeer);
+			else
+				DispatchPacket(msg, pair.HighlevelPeer);
+		}
+
+		private void DispatchPacket(IEncryptablePackage packet, Peer passTo)
+		{
+
+		}
+
+		private void DispatchPacket(IPackage packet, Peer passTo)
+		{
+			if (passTo == null)
+				return;
+
+#if DEBUGBUILD
+			ClassLogger.LogDebug("Handling higherlevel packet. OperationType: " + ((Packet.OperationType)packet.OperationType).ToString() + " Serialization ID: "
+				+ packet.SerializerKey);
+#endif
+			//TODO: Handle encrypted packages.
+			try
+			{
+
+				if (this.SerializerRegister.HasKey(packet.SerializerKey))
+					//TODO: Refactor
+					switch ((Packet.OperationType)packet.OperationType)
+					{
+						case Packet.OperationType.Event:
+							EventPackage ePackage = GeneratePackage<EventPackage>(packet);
+							if (ePackage != null)
+								passTo.PackageRecieve(ePackage);
+							break;
+						case Packet.OperationType.Request:
+							//ClassLogger.LogDebug("Hit request");
+							RequestPackage rqPackage = GeneratePackage<RequestPackage>(packet);
+							if (rqPackage != null)
+							{
+								//ClassLogger.LogDebug("About to call peer method");
+								passTo.PackageRecieve(rqPackage);
+							}
+							break;
+						case Packet.OperationType.Response:
+							ResponsePackage rPackage = GeneratePackage<ResponsePackage>(packet);
+							if (rPackage != null)
+								passTo.PackageRecieve(rPackage);
+							break;
+					}
+				else
+					ClassLogger.LogError("Recieved a packet that cannot be handled due to not having a serializer registered with byte code: " + packet.SerializerKey);
+			}
+			catch (NullReferenceException e)
+			{
+				this.ClassLogger.LogError(typeof(Peer).FullName + " ID: " + passTo.InternalNetConnection.RemoteUniqueIdentifier + " sent packet that we failed to deserialize with method key " +
+					packet.SerializerKey + ".");
+#if DEBUGBUILD
+				throw new SerializationException(typeof(EventPackage), null, e, "Failed to deserialize for eventpackage, likely due to serializer key: " +
+					packet.SerializerKey + " being unreigstered.");
+#endif
+			}
+			catch (LoggableException e)
+			{
+				this.ClassLogger.LogError(e.Message);
+			}
 		}
 
 		//TODO: Address memory leak; not critical atm.
@@ -472,61 +535,6 @@ namespace GladNet.Server
 				this.ClassLogger.LogError("Failed to read hail message. Exception: " + e.Message);
 #endif
 				return false;
-			}
-		}
-
-		private void ProcessHigherLevelPacket(LidgrenTransferPacket packet, Peer passTo)
-		{
-			if (passTo == null)
-				return;
-
-#if DEBUGBUILD
-			ClassLogger.LogDebug("Handling higherlevel packet. OperationType: " + ((Packet.OperationType)packet.OperationType).ToString() + " Serialization ID: " 
-				+ packet.SerializerKey);
-#endif
-			//TODO: Handle encrypted packages.
-			try
-			{
-
-				if (this.SerializerIsKnown(packet.SerializerKey))
-					//TODO: Refactor
-					switch ((Packet.OperationType)packet.OperationType)
-					{
-						case Packet.OperationType.Event:
-							EventPackage ePackage = GeneratePackage<EventPackage>(packet);
-							if (ePackage != null)
-								passTo.PackageRecieve(ePackage);
-							break;
-						case Packet.OperationType.Request:
-							//ClassLogger.LogDebug("Hit request");
-							RequestPackage rqPackage = GeneratePackage<RequestPackage>(packet);
-							if (rqPackage != null)
-							{
-								//ClassLogger.LogDebug("About to call peer method");
-								passTo.PackageRecieve(rqPackage);
-							}
-							break;
-						case Packet.OperationType.Response:
-							ResponsePackage rPackage = GeneratePackage<ResponsePackage>(packet);
-							if (rPackage != null)
-								passTo.PackageRecieve(rPackage);
-							break;
-					}
-				else
-					ClassLogger.LogError("Recieved a packet that cannot be handled due to not having a serializer registered with byte code: " + packet.SerializerKey);
-			}
-			catch (NullReferenceException e)
-			{
-				this.ClassLogger.LogError(typeof(Peer).FullName + " ID: " + passTo.InternalNetConnection.RemoteUniqueIdentifier + " sent packet that we failed to deserialize with method key " +
-					packet.SerializerKey + ".");
-#if DEBUGBUILD
-				throw new SerializationException(typeof(EventPackage), null, e, "Failed to deserialize for eventpackage, likely due to serializer key: " +
-					packet.SerializerKey + " being unreigstered.");
-#endif
-			}
-			catch(LoggableException e)
-			{
-				this.ClassLogger.LogError(e.Message);
 			}
 		}
 

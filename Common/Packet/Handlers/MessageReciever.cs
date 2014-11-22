@@ -17,7 +17,7 @@ namespace GladNet.Common
 {
 	public abstract class MessageReciever
 	{
-		private readonly IRegisterable<SerializerBase, byte> SerializerRegister;
+		protected readonly IRegisterable<SerializerBase, byte> SerializerRegister;
 
 		private readonly IPacketConverter Converter;
 
@@ -50,16 +50,6 @@ namespace GladNet.Common
 				throw new Exception("Failed to register Serializer of Type: " + Serializer<T>.Instance.GetType().FullName + " due to a already inuse serializer key.");
 
 			return this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey);
-		}
-
-		public bool SerializerIsKnown(byte key)
-		{
-			return this.SerializerRegister.HasKey(key);
-		}
-
-		public SerializerBase GetSerializer(byte key)
-		{
-			return this.SerializerRegister[key];
 		}
 		#endregion
 
