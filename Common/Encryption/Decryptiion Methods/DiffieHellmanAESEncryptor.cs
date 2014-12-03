@@ -11,6 +11,7 @@ namespace GladNet.Common
 		readonly ECDiffieHellmanCng internalDiffieHellmanImplementation;
 
 		public DiffieHellmanAESEncryptor()
+			: base()
 		{
 			//Prepre diffiehellman key exchange, diffiehellman will produce key material via a hash algorithm that defaults to
 			//SHA 256
@@ -38,12 +39,17 @@ namespace GladNet.Common
 			throw new NotImplementedException();
 		}
 
-		public override byte[] GetPublicKey(byte[] pKey)
+		public override byte[] GetPublicKey()
 		{
 			throw new NotImplementedException();
 		}
 
 		public override byte[] NetworkInitRequiredData()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override bool SetNetworkInitRequiredData(byte[] data)
 		{
 			throw new NotImplementedException();
 		}

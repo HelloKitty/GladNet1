@@ -8,11 +8,19 @@ namespace GladNet.Common
 {
 	public abstract class EncryptionBase
 	{
+		public delegate byte[] Decryptor(byte[] toDecrypt, byte[] additionalBytes);
+		public delegate byte[] Encryptor(byte[] toEncrypt, out byte[] addtionalBytes);
+
 		/// <summary>
 		/// Indicates the method of encryption, this should be unique so to identify encryption uses by remote users
 		/// for packets.
 		/// </summary>
 		public abstract byte EncryptionTypeByte { get; }
+
+		public EncryptionBase()
+		{
+
+		}
 
 		/// <summary>
 		/// Sets the public key for the encryption method.
@@ -21,7 +29,7 @@ namespace GladNet.Common
 		/// <returns>True if the key fits the method.</returns>
 		public abstract bool SetKeyPublicKey(byte[] pKey);
 
-		public abstract byte[] GetPublicKey(byte[] pKey);
+		public abstract byte[] GetPublicKey();
 
 		/// <summary>
 		/// Encrypts a blob of bytes and returns the encrypted byte[]
@@ -40,5 +48,6 @@ namespace GladNet.Common
 		public abstract byte[] Decrypt(byte[] toDecrypt, byte[] additionalBytes);
 
 		public abstract byte[] NetworkInitRequiredData();
+		public abstract bool SetNetworkInitRequiredData(byte[] data);
 	}
 }

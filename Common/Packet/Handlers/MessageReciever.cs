@@ -17,41 +17,12 @@ namespace GladNet.Common
 {
 	public abstract class MessageReciever
 	{
-		protected readonly IRegisterable<SerializerBase, byte> SerializerRegister;
-
-		private readonly IPacketConverter Converter;
+		protected readonly PacketParser NetworkMessageHandler;
 
 		public MessageReciever()
 		{
-			//Create the registers for serializers and the messagehandlers for a given serializer too.
-			SerializerRegister = new SerializationManager();
-			//Register profobuf-net as it's used internally
-			//Create the message converter that will hold references to 
-			//HighlevelMessageConverter = new LidgrenMessageConverter();
-			Converter = new PacketConverter();
-		}
 
-		public MessageReciever(IRegisterable<SerializerBase, byte> serializerRegister, IPacketConverter converter)
-		{
-			this.SerializerRegister = serializerRegister;
-			Converter = converter;
 		}
-
-		#region Methods that hide the implementation of the serializer registery from base classes
-		/// <summary>
-		/// Provides a method for users to register their own serializer with the networking. This will create a handler to handle packet serialized with the serializer
-		/// as long as the reciever also register the serializer too.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <returns></returns>
-		public bool RegisterSerializer<T>() where T : SerializerBase
-		{
-			if (SerializerRegister.HasKey(Serializer<T>.Instance.SerializerUniqueKey))
-				throw new Exception("Failed to register Serializer of Type: " + Serializer<T>.Instance.GetType().FullName + " due to a already inuse serializer key.");
-
-			return this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey);
-		}
-		#endregion
 
 		public bool RegisterProtobufPacket(Type t)
 		{
@@ -65,25 +36,5 @@ namespace GladNet.Common
 		/// </summary>
 		/// <param name="registerAsDefaultFunc">The defauly packet registeration function.</param>
 		protected abstract void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc);
-
-		//(No longer internal due to Unity3D Requirements) This is internal because we don't want child classes having access to it but we need some derived classes to have access.
-		protected PackageType GeneratePackage<PackageType, T>(IEncryptablePackage packet, EncryptionBase decrypter)
-			where PackageType : NetworkPackage, new()
-		{
-			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
-				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
-
-			return Converter.Convert<PackageType>(packet, SerializerRegister[packet.SerializerKey], decrypter);
-		}
-
-		//(No longer internal due to Unity3D Requirements) This is internal because we don't want child classes having access to it but we need some derived classes to have access.
-		protected PackageType GeneratePackage<PackageType>(IPackage packet)
-			where PackageType : NetworkPackage, new()
-		{
-			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
-				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
-
-			return Converter.Convert<PackageType>(packet, SerializerRegister[packet.SerializerKey]);
-		}
 	}
 }

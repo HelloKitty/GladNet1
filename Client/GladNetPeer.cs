@@ -297,7 +297,7 @@ namespace GladNet.Client
 				switch (transferPacket.OperationType)
 				{
 					case Packet.OperationType.Event:
-						EventPackage ePackage = this.Converter.BuildIncomingNetPackage<EventPackage>(transferPacket, SerializerRegister[transferPacket.SerializerKey]);
+						EventPackage ePackage = this.GeneratePackage<EventPackage>(transferPacket);
 
 						if (ePackage != null)
 							this.RecieverListener.RecievePackage(ePackage);
@@ -308,7 +308,7 @@ namespace GladNet.Client
 						break;
 
 					case Packet.OperationType.Response:
-						ResponsePackage rPackage = this.Converter.BuildIncomingNetPackage<ResponsePackage>(transferPacket, SerializerRegister[transferPacket.SerializerKey]);
+						ResponsePackage rPackage = this.GeneratePackage<ResponsePackage>(transferPacket);
 
 						if (rPackage != null)
 							this.RecieverListener.RecievePackage(rPackage);
@@ -447,6 +447,10 @@ namespace GladNet.Client
 				LidgrenTransferPacket transferPacket = 
 					new LidgrenTransferPacket(Packet.OperationType.Request, packet.SerializerKey, packetCode, packet.Serialize());
 
+				if(encrypt != 0)
+				{
+					transferPacket.Encrypt()
+				}
 
 				//TODO: Encryption tiiiiiime
 				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);

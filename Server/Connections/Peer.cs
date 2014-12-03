@@ -19,6 +19,11 @@ namespace GladNet.Server
 {
 	public abstract class Peer
 	{
+		/// <summary>
+		/// Provides a Dictionary/like datastructure to hold encryption object instances.
+		/// </summary>
+		internal readonly EncryptionRegister EncryptionRegister;
+
 		public IPEndPoint RemoteConnectionEndpoint { get; private set; }
 		public long UniqueConnectionId { get; private set; }
 		internal NetConnection InternalNetConnection { get; private set; }
@@ -31,6 +36,13 @@ namespace GladNet.Server
 		public Peer(IConnectionDetails details)
 		{
 			MemberwiseConnectionDetailsCopyToClass(details);
+			EncryptionRegister = new EncryptionRegister();
+		}
+
+		public Peer(IConnectionDetails details, EncryptionRegister encryptRegister)
+		{
+			MemberwiseConnectionDetailsCopyToClass(details);
+			EncryptionRegister = encryptRegister;
 		}
 
 		private void MemberwiseConnectionDetailsCopyToClass(IConnectionDetails details)

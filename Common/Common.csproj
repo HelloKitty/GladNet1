@@ -60,23 +60,29 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Encryption\Decryptiion Methods\DiffieHellmanEncryptor.cs" />
+    <Compile Include="Encryption\Decryptiion Methods\DiffieHellmanAESEncryptor.cs" />
     <Compile Include="Encryption\EncryptionBase.cs" />
+    <Compile Include="Encryption\EncryptionRegister.cs" />
     <Compile Include="Encryption\IEncryptable.cs" />
     <Compile Include="Exceptions\LoggableException.cs" />
     <Compile Include="Exceptions\SerializationException.cs" />
     <Compile Include="Logging\ILoggable.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\Loggers\ConsoleLogger.cs" />
-    <Compile Include="Packet\Handlers\Handler.cs" />
+    <Compile Include="Packet\Converting\IPacketConverter.cs" />
+    <Compile Include="Packet\Handlers\IHandler.cs" />
     <Compile Include="Packet\Handlers\MessageReciever.cs" />
-    <Compile Include="Packet\Handlers\Packet\PacketConverter.cs" />
+    <Compile Include="Packet\Converting\PacketConverter.cs" />
+    <Compile Include="Packet\Converting\IConverter.cs" />
+    <Compile Include="Packet\Encryption\IEncryptablePackage.cs" />
+    <Compile Include="Packet\IPackage.cs" />
     <Compile Include="Packet\LidgrenTransferPacket.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
     <Compile Include="Packet\Packages\ResponsePackage.cs" />
     <Compile Include="Packet\Packages\EventPackage.cs" />
     <Compile Include="Packet\Packages\NetworkPackage.cs" />
     <Compile Include="Packet\Packet Types\EmptyPacket.cs" />
+    <Compile Include="Packet\Packet Types\EncryptionRequest.cs" />
     <Compile Include="Packet\Packet Types\ProtobufSyncPackage.cs" />
     <Compile Include="Packet\Packet.cs" />
     <Compile Include="Packet\PacketAttribute.cs" />
@@ -93,7 +99,10 @@
     <None Include="packages.config" />
     <None Include="ProjectHeader.licenseheader" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Message Handling\" />
+    <Folder Include="Packet\Handlers\Packet\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

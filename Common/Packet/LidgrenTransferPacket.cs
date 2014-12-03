@@ -67,12 +67,20 @@ namespace GladNet.Common
 
 			OperationType = opType;
 			PacketCode = packetCode;
+
+			EncryptionMethodByte = 0;
 		}
 
 		//Protobuf-net constructor
 		private LidgrenTransferPacket()
 		{
 
+		}
+
+		[ProtoAfterDeserialization]
+		private void SetupForEncryption()
+		{
+			isEncrypted = EncryptionMethodByte != 0;
 		}
 
 		public override string ToString()
@@ -113,6 +121,8 @@ namespace GladNet.Common
 				{
 					this.InternalByteRepresentation = encryptionObject.Decrypt(InternalByteRepresentation,
 						_EncryptionAdditionalBlob);
+
+					isEncrypted = false;
 
 					return this.InternalByteRepresentation != null;
 
