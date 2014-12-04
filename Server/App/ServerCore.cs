@@ -91,7 +91,7 @@ namespace GladNet.Server
 		public ServerCore(Logger loggerInstance, string appName, int port, string hailMessage) 
 			: base()
 		{
-			NetworkMessageHandler = new PacketHandler();
+			NetworkMessageHandler = new PacketHandler(loggerInstance);
 
 			Port = port;
 			UnhandledServerConnections = new List<ConnectionResponse>();
@@ -306,7 +306,7 @@ namespace GladNet.Server
 				{
 					case NetIncomingMessageType.ConnectionApproval:
 						ClassLogger.LogDebug("Hit connection approval");
-						if (TryReadHailMessage(msg, ExpectedClientHailMessage))
+						if (this.NetworkMessageHandler.TryReadHailMessage(msg, ExpectedClientHailMessage))
 						{
 							ClassLogger.LogDebug("About to approve.");
 							try
@@ -336,7 +336,7 @@ namespace GladNet.Server
 							else
 								//If this point is reached it indicates that the status change is not from a registered connection and
 								//this could indicate potentially a subserver connecting or maybe a client message before hail approval.
-								ReadStatusChange((NetConnectionStatus)msg.ReadByte(), msg.SenderConnection);	
+								ReadStatusChange((NetConnectionStatus)msg.ReadByte(), msg.SenderConnection);
 						}
 						catch (NetException e)
 						{
@@ -347,58 +347,34 @@ namespace GladNet.Server
 						break;
 
 					case NetIncomingMessageType.ExternalHighlevelMessage:
-						OnRecieveExternalMessage(msg);
+						OnRecieveMessage(msg, false);
 						break;
 					case NetIncomingMessageType.Data:
-						HandleInternalGladNetMessage(msg);
+						OnRecieveMessage(msg, true);
+						break;
 				}
 
 				peer.Recycle(msg);
 			}
 		}
 
-
-		private void OnRecieveExternalMessage(NetIncomingMessage msg)
+		private void OnRecieveMessage(NetIncomingMessage msg, bool isInternal)
 		{
 #if DEBUGBUILD
 			ClassLogger.LogDebug("Recieved a high level message from client ID: " + msg.SenderConnection.RemoteUniqueIdentifier);
 #endif
 
 			if (Clients.HasKey(msg.SenderConnection.RemoteUniqueIdentifier)) //Client sent the message
-				NetworkMessageHandler.DispatchMessage(Clients[msg.SenderConnection.RemoteUniqueIdentifier].HighlevelPeer, msg);
-				//ForwardHighlevelMessageToPeer(transferPacket, Clients[msg.SenderConnection.RemoteUniqueIdentifier]);
+				NetworkMessageHandler.DispatchMessage(Clients[msg.SenderConnection.RemoteUniqueIdentifier].HighlevelPeer, msg, isInternal);
 			else if (ServerConnections.HasKey(msg.SenderConnection.RemoteUniqueIdentifier)) //Subserver sent a message
-				//ForwardHighlevelMessageToPeer(transferPacket, ServerConnections[msg.SenderConnection.RemoteUniqueIdentifier]);
+				NetworkMessageHandler.DispatchMessage(ServerConnections[msg.SenderConnection.RemoteUniqueIdentifier].HighlevelPeer, msg, isInternal);
 			else
 				ClassLogger.LogWarn("Recieved highlevel message with no receving object.");
-
 
 			//At this point the message is for nobody and we shouldn't have recieved it.
 			//In a perfect world we'd disconnect whoever sent it but we can't be sure a real client actually sent it
 			//The package could be faked so just drop it.
 		}
-
-		/*private void ForwardHighlevelMessageToPeer<PeerType>(LidgrenTransferPacket msg, ConnectionPair<NetConnection, PeerType> pair)
-			where PeerType : Peer
-		{
-			//ConnectionPair<NetConnection, PeerType> connectionPair = connections[uniquedId];
-
-			//Shouldn't be null but just incase.
-			if (pair == null)
-				return;
-			try
-			{
-				if (!msg.isEncrypted)
-					this.NetworkMessageHandler.DispatchMessage(pair.HighlevelPeer, msg);
-				else
-					this.NetworkMessageHandler.DispatchEncryptedMessage(pair.HighlevelPeer, msg);
-
-			}
-			catch (LoggableException e)
-			{
-				this.ClassLogger.LogError(e.Message);
-			}
-		}*/
 
 		//TODO: Address memory leak; not critical atm.
 		private void ReadStatusChange(NetConnectionStatus netConnectionStatus, NetConnection netConnection)

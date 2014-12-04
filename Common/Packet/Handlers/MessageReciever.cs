@@ -15,13 +15,13 @@ using System.Text;
 
 namespace GladNet.Common
 {
-	public abstract class MessageReciever
+	/*public abstract class MessageReciever
 	{
 		protected readonly PacketParser NetworkMessageHandler;
 
-		public MessageReciever()
+		public MessageReciever(Logger logger)
 		{
-
+			NetworkMessageHandler = new PacketParser(logger);
 		}
 
 		public bool RegisterProtobufPacket(Type t)
@@ -36,5 +36,5 @@ namespace GladNet.Common
 		/// </summary>
 		/// <param name="registerAsDefaultFunc">The defauly packet registeration function.</param>
 		protected abstract void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc);
-	}
+	}*/
 }

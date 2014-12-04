@@ -14,7 +14,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GladNet.Server
+namespace GladNet.Common
 {
 	public interface IConnectionDetails
 	{

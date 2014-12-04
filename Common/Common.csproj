@@ -18,7 +18,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;DEBUG DEBUGBUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
@@ -35,7 +35,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnityDebug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\UnityDebug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;UNITYDEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;UNITYDEBUG DEBUG DEBUGBUILD</DefineConstants>
     <NoWarn>0168</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -60,6 +60,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connections\IConnectionDetails.cs" />
+    <Compile Include="Connections\Peer.cs" />
     <Compile Include="Encryption\Decryptiion Methods\DiffieHellmanAESEncryptor.cs" />
     <Compile Include="Encryption\EncryptionBase.cs" />
     <Compile Include="Encryption\EncryptionRegister.cs" />
@@ -75,6 +77,8 @@
     <Compile Include="Packet\Converting\PacketConverter.cs" />
     <Compile Include="Packet\Converting\IConverter.cs" />
     <Compile Include="Packet\Encryption\IEncryptablePackage.cs" />
+    <Compile Include="Packet\Handlers\Packet\PacketHandler.cs" />
+    <Compile Include="Packet\Handlers\Packet\PacketParser.cs" />
     <Compile Include="Packet\IPackage.cs" />
     <Compile Include="Packet\LidgrenTransferPacket.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
@@ -83,6 +87,7 @@
     <Compile Include="Packet\Packages\NetworkPackage.cs" />
     <Compile Include="Packet\Packet Types\EmptyPacket.cs" />
     <Compile Include="Packet\Packet Types\EncryptionRequest.cs" />
+    <Compile Include="Packet\Packet Types\InternalPacketCodes.cs" />
     <Compile Include="Packet\Packet Types\ProtobufSyncPackage.cs" />
     <Compile Include="Packet\Packet.cs" />
     <Compile Include="Packet\PacketAttribute.cs" />
@@ -101,7 +106,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Message Handling\" />
-    <Folder Include="Packet\Handlers\Packet\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

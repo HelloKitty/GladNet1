@@ -84,10 +84,8 @@
     <Compile Include="Connections\Connection Components\ConnectionCollection.cs" />
     <Compile Include="Connections\Connection Components\ConnectionPair.cs" />
     <Compile Include="Connections\Connection Components\IConnectionCollection.cs" />
-    <Compile Include="Connections\Connection Components\IConnectionDetails.cs" />
     <Compile Include="Connections\Connection Components\ConnectionRequest.cs" />
     <Compile Include="Connections\Connection Components\ConnectionResponse.cs" />
-    <Compile Include="Connections\Peer.cs" />
     <Compile Include="Connections\ClientPeer.cs" />
     <Compile Include="Connections\Readers\HighlevelMessageHandler.cs" />
     <Compile Include="Connections\ServerPeer.cs" />
@@ -116,7 +114,9 @@
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Packet\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="ProjectHeader.licenseheader" />
   </ItemGroup>

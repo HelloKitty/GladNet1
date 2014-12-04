@@ -31,17 +31,30 @@ namespace GladNet.Common
 			Converter = converter;	
 		}
 
-		public LidgrenTransferPacket BuildTransferPacket(NetBuffer msg)
+		protected LidgrenTransferPacket BuildTransferPacket(NetBuffer msg)
 		{
-#if DEBUGBUILD
-			ClassLogger.LogDebug("Recieved a high level message from client ID: " + msg.SenderConnection.RemoteUniqueIdentifier);
-#endif
 			try
 			{
 				//Due to message recycling we cannot trust the internal array of data to be of only the information that should be used for this package.
 				//We can trust the indicates size, not the length of .Data, and get a byte[] that represents the sent LidgrenTransferPacket.
 				//However, this will incur a GC penalty which may become an issue; more likely to be an issue on clients.
 				return Serializer<GladNetProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
+			}
+			catch (LoggableException e)
+			{
+				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
+				return null;
+			}
+		}
+
+		protected LidgrenTransferPacket BuildTransferPacket(byte[] bytes)
+		{
+			try
+			{
+				//Due to message recycling we cannot trust the internal array of data to be of only the information that should be used for this package.
+				//We can trust the indicates size, not the length of .Data, and get a byte[] that represents the sent LidgrenTransferPacket.
+				//However, this will incur a GC penalty which may become an issue; more likely to be an issue on clients.
+				return Serializer<GladNetProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(bytes);
 			}
 			catch (LoggableException e)
 			{
