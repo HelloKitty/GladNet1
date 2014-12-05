@@ -1,20 +1,26 @@
 ﻿using Org.Mentalis.Security.Cryptography;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace GladNet.Common
 {
 	public class DiffieHellmanAESEncryptor : EncryptionBase
 	{
-		private readonly DiffieHellmanManaged internalEncryptionObj;
+		public static byte[] Bytes;
+
+		private DiffieHellmanManaged internalEncryptionObj;
 		private byte[] secretKey;
+		private bool SentPublicKey;
 
 		public DiffieHellmanAESEncryptor()
 			: base()
 		{
-			internalEncryptionObj = new DiffieHellmanManaged();
+			internalEncryptionObj = new DiffieHellmanManaged(256, 160, DHKeyGeneration.Random);
+			SentPublicKey = false;
 		}
 
 		public override byte EncryptionTypeByte
@@ -29,12 +35,73 @@ namespace GladNet.Common
 
 		public override byte[] Encrypt(byte[] toEncrypt, out byte[] addtionalBytes)
 		{
-			throw new NotImplementedException();
+			if (toEncrypt == null)
+				throw new LoggableException("Tried to encrypt a null array.", new ArgumentException("In DiffieHellmanAESEncryptor: Encrypt. Parameter was null", "toEncrypt"), Logger.LogType.Error);
+
+			try
+			{
+				using (AesCryptoServiceProvider aesObj = new AesCryptoServiceProvider())
+				{
+					aesObj.Key = this.secretKey;
+
+					ICryptoTransform encryptor = aesObj.CreateEncryptor(aesObj.Key, aesObj.IV);
+
+					using (MemoryStream ms = new MemoryStream())
+					{
+						using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+						{
+							using (BinaryWriter sw = new BinaryWriter(cs))
+							{
+								sw.Write(toEncrypt);
+							}
+						}
+						//This is additional salt-like information for the AES algorithm to
+						//package with the packet.
+						addtionalBytes = aesObj.IV;
+						return ms.ToArray();
+					}
+				}
+			}
+			catch(CryptographicException e)
+			{
+				throw new LoggableException("Failed to encrypt package in DiffieHellmanAESEncryptor.", e, Logger.LogType.Error);
+			}
 		}
 
 		public override byte[] Decrypt(byte[] toDecrypt, byte[] additionalBytes)
 		{
-			throw new NotImplementedException();
+			if (toDecrypt == null || toDecrypt.Length == 0)
+				throw new LoggableException("Tried to decrypt a null array.", new ArgumentException("In DiffieHellmanAESEncryptor: Decrypt. Parameter was null", "toDecrypt"), Logger.LogType.Error);
+
+			if (additionalBytes == null || additionalBytes.Length == 0)
+				throw new LoggableException("IV For AES decryption was null (additionalBytes)", new ArgumentException("In DiffieHellmanAESEncryptor parameter for Decrypt was null", "additionalBytes"), Logger.LogType.Error);
+
+			try
+			{
+				using (AesCryptoServiceProvider aesObj = new AesCryptoServiceProvider())
+				{
+					aesObj.Key = this.secretKey;
+					aesObj.IV = additionalBytes;
+
+					ICryptoTransform decryptor = aesObj.CreateDecryptor(aesObj.Key, aesObj.IV);
+
+					using (MemoryStream ms = new MemoryStream(toDecrypt))
+					{
+						using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+						{
+							using (BinaryReader br = new BinaryReader(cs))
+							{
+								//Reads every single byte in the stream
+								return br.ReadBytes((int)toDecrypt.Length);
+							}
+						}
+					}
+				}
+			}
+			catch (CryptographicException e)
+			{
+				throw new LoggableException("Failed to decrypt package in DiffieHellmanAESEncryptor.", e, Logger.LogType.Error);
+			}
 		}
 
 		public override byte[] GetPublicKey()
@@ -47,6 +114,7 @@ namespace GladNet.Common
 
 		public override byte[] NetworkInitRequiredData()
 		{
+			SentPublicKey = true;
 			return this.GetPublicKey();
 		}
 
@@ -61,9 +129,12 @@ namespace GladNet.Common
 					throw new LoggableException("Failed to set DiffieHellman params.", null, Logger.LogType.Error);
 				}
 
-				//We can import the parameters again on the client. We don't really want to but it's the easy way to handle the response. In this method
-				//We cannot determine if we're the server or the client requesting this.
-				internalEncryptionObj.ImportParameters(container.Parameters);
+				//If we're the second peer we want to import the parameters.
+				if (!SentPublicKey)
+				{
+					this.internalEncryptionObj.Clear();
+					this.internalEncryptionObj = new DiffieHellmanManaged(container.Parameters.P, container.Parameters.G, 160);
+				}
 
 				if (container.PublicKey == null)
 					throw new LoggableException("Recieved a null public key for mentalis DiffieHellman exchange.", null, Logger.LogType.Error);
@@ -71,6 +142,19 @@ namespace GladNet.Common
 				secretKey = internalEncryptionObj.DecryptKeyExchange(container.PublicKey);
 
 				Console.WriteLine("DH KeyLength: " + secretKey.Length);
+
+				for (int i = 0; i < secretKey.Length; i++)
+					Console.Write(secretKey[i] + " ");
+
+				Bytes = secretKey;
+
+				/*internalEncryptionObj.DecryptKeyExchange(container.PublicKey);
+
+				internalEncryptionObj.
+
+				secretKey = internalEncryptionObj.ExportParameters(true).X;
+
+				Console.WriteLine("DH KeyLength: " + secretKey.Length);*/
 
 				return secretKey != null;
 			}

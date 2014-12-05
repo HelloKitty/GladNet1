@@ -30,6 +30,10 @@ namespace GladNet.Common
 
 		public virtual bool DispatchMessage(Peer toPassTo, NetBuffer msg, bool isInternal)
 		{
+			
+			if (msg == null)
+				throw new LoggableException("When dispatched NetBuffer was found to be null.", null, Logger.LogType.Error);
+
 			LidgrenTransferPacket packet = this.BuildTransferPacket(msg);
 
 			if (toPassTo == null)
@@ -41,8 +45,24 @@ namespace GladNet.Common
 				return false;
 			}
 
-			if(!isInternal)
-				if(packet.isEncrypted)
+			if (packet == null)
+			{
+				ClassLogger.LogError("Lidgren packet built to null.");
+				return false;
+			}
+
+			if (toPassTo == null)
+			{
+				ClassLogger.LogError("When attempted to dispatch the Peer passed was found to be null.");
+				return false;
+			}
+
+#if UNITYDEBUG || DEBUG
+			this.ClassLogger.LogDebug("About to handle packet. Encrypted: " + packet.isEncrypted.ToString() + " EncryptionCode: " + packet.EncryptionMethodByte);
+#endif
+
+			if (!isInternal)
+				if (packet.isEncrypted)
 				{
 					return DispatchEncryptedMessage(toPassTo, packet);
 				}
@@ -179,7 +199,7 @@ namespace GladNet.Common
 
 			EncryptionBase newEncryptionObj = EncryptionFactory[eq.EncryptionByteType]();
 
-			toPassTo.EncryptionRegister.Register(EncryptionFactory[eq.EncryptionByteType](), eq.EncryptionByteType);
+			toPassTo.EncryptionRegister.Register(newEncryptionObj, eq.EncryptionByteType);
 
 			bool result = toPassTo.EncryptionRegister[eq.EncryptionByteType]
 				.SetNetworkInitRequiredData(eq.EncryptionInitInfo);
@@ -236,6 +256,8 @@ namespace GladNet.Common
 
 		private bool Dispatch(Peer toPassTo, IPackage packet)
 		{
+			try
+			{
 				//TODO: Refactor
 				switch ((Packet.OperationType)packet.OperationType)
 				{
@@ -262,6 +284,12 @@ namespace GladNet.Common
 					default:
 						return false;
 				}
+			}
+			catch (LoggableException e)
+			{
+				ClassLogger.LogError(e.Message + e.InnerException != null ? " Inner: " + e.InnerException : "");
+				return false;
+			}
 		}
 
 		public bool TryReadHailMessage(NetIncomingMessage msg, string expected)

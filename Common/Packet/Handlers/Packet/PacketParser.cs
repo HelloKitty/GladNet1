@@ -42,7 +42,7 @@ namespace GladNet.Common
 			}
 			catch (LoggableException e)
 			{
-				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
+				ClassLogger.LogError("Couldn't build lidgren packet: " + e.Message + e.InnerException != null ? e.InnerException.Message : "");
 				return null;
 			}
 		}

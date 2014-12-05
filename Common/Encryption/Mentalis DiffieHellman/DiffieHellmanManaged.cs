@@ -33,7 +33,10 @@ namespace Org.Mentalis.Security.Cryptography {
 		/// <param name="keygen">One of the <see cref="DHKeyGeneration"/> values.</param>
 		/// <remarks>The larger the bit length, the more secure the algorithm is. The default is 1024 bits. The minimum bit length is 128 bits.<br/>The size of the private value will be one fourth of the bit length specified.</remarks>
 		/// <exception cref="ArgumentException">The specified bit length is invalid.</exception>
-		public DiffieHellmanManaged(int bitlen, int l, DHKeyGeneration keygen) {
+		public DiffieHellmanManaged(int bitlen, int l, DHKeyGeneration keygen) 
+		{
+			//GladNet modification. This is gutsy. To modify an underlying encryption algorithm.
+			//However, we don't want 256 bit AES. We want 128 bit.
 			if (bitlen < 256 || l < 0)
 				throw new ArgumentException();
 			BigInteger p, g;

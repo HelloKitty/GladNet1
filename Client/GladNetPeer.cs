@@ -48,7 +48,10 @@ namespace GladNet.Client
 		public GladNetPeer(IListener listener, Logger logger = null)
 					: base(null)
 		{
-			NetworkMessageHandler = new ClientPacketHandler(logger);
+			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
+
+			NetworkMessageHandler = new ClientPacketHandler(ClassLogger);
+
 			RecieverListener = listener;
 			//Call the interface method to register the packets.
 			RegisterProtobufPackets(Packet.Register);
@@ -56,7 +59,7 @@ namespace GladNet.Client
 			//This registers the default serializer
 			NetworkMessageHandler.Register<GladNetProtobufNetSerializer>();
 
-			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
+
 			networkPackageQueue = new Queue<Action>(20);
 			networkIncomingEnqueueSyncObj = new object();
 			internalLidgrenClient = null;
@@ -239,7 +242,7 @@ namespace GladNet.Client
 						//This is because we have a Queue<Action> and thus we can't possibly catch the exception coming from the main thread via the lambda generated Action instance.
 						catch (NullReferenceException e)
 						{
-							ClassLogger.LogError("Error occurred during polling: " + e.Message);
+							ClassLogger.LogError("Error occurred during polling: " + e.Message + " StackTrace: " + e.StackTrace + " Source: " + e.Source);
 							//If we hit this point it generally means that the object has gone out of scope for some reason without disconnecting (usually in Unity going from playmode
 							//to the editor so at this point we should just catch it and let the application and thread die.
 							_isConnected = false;
