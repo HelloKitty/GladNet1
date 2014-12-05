@@ -22,9 +22,9 @@ namespace GladNet.Client
 	public sealed class GladNetPeer : Peer, ILoggable
 	{
 		#region Package Action Queue
-		private object networkIncomingEnqueueSyncObj;
+		private readonly object networkIncomingEnqueueSyncObj;
 		//TODO: Explore the GC pressure that a queue of Actions, with lambdas creating them, causes.
-		private Queue<Action> networkPackageQueue;
+		private readonly Queue<Action> networkPackageQueue;
 		#endregion
 
 		#region Lidgren Network Objects
@@ -39,7 +39,7 @@ namespace GladNet.Client
 
 		private volatile bool _isConnected;
 
-		private ClientPacketHandler NetworkMessageHandler;
+		private readonly ClientPacketHandler NetworkMessageHandler;
 
 		private double timeNowByPoll = 0;
 		private double timeNowByPollComparer = 0;
@@ -223,7 +223,7 @@ namespace GladNet.Client
 						_isConnected = false;
 						if (internalLidgrenClient != null)
 							//Should be thread safe and fine to do.
-							internalLidgrenClient.Disconnect("Disconnecting");
+							this.InternalOnDisconnection();
 					}
 
 					if (msg != null)
@@ -247,13 +247,75 @@ namespace GladNet.Client
 					}
 				}
 			}
+			catch(LoggableException e)
+			{
+				ClassLogger.LogError(e.Message + e.InnerException != null ? "Inner: " + e.InnerException : "");
+			}
 			catch(Exception e)
 			{
 				ClassLogger.LogError(e.Message + e.Data);
 				throw;
 			}
 
+			OnDisconnection();
+
 			networkThread = null;
+		}
+
+		//This is not needed by the client
+		/// <summary>
+		/// Registers an encryption object. This will request that the encryption be established by sending a message to the server.
+		/// Do not try to register an encryption object if you are not connected.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="encryptorInstance"></param>
+		/// <returns></returns>
+		public bool Register<T>(T encryptorInstance) where T : EncryptionBase
+		{
+			if(encryptorInstance == null)
+			{
+				ClassLogger.LogError("Cannot register a null encryption object.");
+				return false;
+			}
+
+			if(this.EncryptionRegister.HasKey(encryptorInstance.EncryptionTypeByte))
+			{
+				ClassLogger.LogError("Tried to register an already known encryption object.");
+				return false;
+			}
+
+			if(!isConnected || RecieverListener == null)
+			{
+				ClassLogger.LogError("Cannot register encryption objects when not connected.");
+				return false;
+			}
+
+			//Set the callback for when the server acknowledges our encryption request.
+			encryptorInstance.OnEstablished += () =>
+			{
+				lock (networkIncomingEnqueueSyncObj)
+				{
+					this.networkPackageQueue.Enqueue(() => { RecieverListener.OnStatusChange(StatusChange.EncryptionEstablished); });
+				}
+			};
+
+			this.EncryptionRegister.Register(encryptorInstance, encryptorInstance.EncryptionTypeByte);
+
+			PacketBase packet = new EncryptionRequest(encryptorInstance.EncryptionTypeByte, encryptorInstance.NetworkInitRequiredData());
+
+			return this.SendMessage(Packet.OperationType.Request, packet, (byte)InternalPacketCode.EncryptionRequest,
+				Packet.DeliveryMethod.ReliableUnordered, 0, 0, true) != Packet.SendResult.FailedNotConnected;
+		}
+
+		/// <summary>
+		/// Registers a serializer, a custom serializer, with the network message handler. This will allow for you to
+		/// register serializers other than Protobuf-net
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		public bool Register<T>() where T : SerializerBase
+		{
+			return this.NetworkMessageHandler.Register<T>();
 		}
 
 		private void ServiceLidgrenMessage(NetIncomingMessage msg)
@@ -283,11 +345,13 @@ namespace GladNet.Client
 							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
-
+				//We can take advantage of using the same logic for both cases.
+				//All that changes is we till the handler it is an internal message for a Data message type.
 				case NetIncomingMessageType.ExternalHighlevelMessage:
+				case NetIncomingMessageType.Data:
 					try
 					{
-						this.NetworkMessageHandler.DispatchMessage(this, msg, false);
+						this.NetworkMessageHandler.DispatchMessage(this, msg, msg.MessageType == NetIncomingMessageType.Data);
 					}
 					catch(LoggableException e)
 					{
@@ -375,6 +439,7 @@ namespace GladNet.Client
 			{
 				//Registering the empty packet
 				Packet.Register(typeof(EmptyPacket), true);
+				Packet.Register(typeof(EncryptionRequest), true);
 
 				Packet.SetupProtoRuntimePacketInheritance();
 				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);	
@@ -415,8 +480,10 @@ namespace GladNet.Client
 
 		public override void OnDisconnection()
 		{
-
+			//We need to clear the register so on reconnects we don't try to re-add or re-use old stale encryption objects.
+			this.EncryptionRegister.Clear();
 		}
+
 		#endregion
 	}
 }

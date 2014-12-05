@@ -111,5 +111,13 @@ namespace GladNet.Server
 		{
 			return RegisteredPeers;
 		}
+
+
+		public void Clear()
+		{
+			this.InternalPeerTable.Clear();
+			this.RegisteredNetConnections.Clear();
+			this.RegisteredPeers.Clear();
+		}
 	}
 }

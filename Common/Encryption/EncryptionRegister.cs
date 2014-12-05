@@ -66,5 +66,11 @@ namespace GladNet.Common
 			else
 				return null;
 		}
+
+
+		public void Clear()
+		{
+			this.encryptionCollection.Clear();
+		}
 	}
 }

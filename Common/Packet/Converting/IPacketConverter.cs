@@ -13,5 +13,7 @@ namespace GladNet.Common
 
 		NetworkPackageType Convert<NetworkPackageType>(IEncryptablePackage package, SerializerBase serializer, EncryptionBase decryptor) where NetworkPackageType
 			: NetworkPackage, new();
+
+		PacketBase PacketConstructor(byte[] bytes, SerializerBase serializer);
 	}
 }

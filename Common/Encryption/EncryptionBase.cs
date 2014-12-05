@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace GladNet.Common
 {
-	public abstract class EncryptionBase
+	public abstract class EncryptionBase : IDisposable
 	{
 		public delegate byte[] Decryptor(byte[] toDecrypt, byte[] additionalBytes);
 		public delegate byte[] Encryptor(byte[] toEncrypt, out byte[] addtionalBytes);
@@ -16,6 +16,12 @@ namespace GladNet.Common
 		/// for packets.
 		/// </summary>
 		public abstract byte EncryptionTypeByte { get; }
+
+		/// <summary>
+		/// Will be invoked when the encryption method is fully established.
+		/// You can set a callback here.
+		/// </summary>
+		public Action OnEstablished { get; set; }
 
 		public EncryptionBase()
 		{
@@ -49,5 +55,7 @@ namespace GladNet.Common
 
 		public abstract byte[] NetworkInitRequiredData();
 		public abstract bool SetNetworkInitRequiredData(byte[] data);
+
+		public abstract void Dispose();
 	}
 }

@@ -28,7 +28,7 @@ namespace GladNet.Common
 			return true;
 		}
 
-		public bool DispatchMessage(Peer toPassTo, NetBuffer msg, bool isInternal)
+		public virtual bool DispatchMessage(Peer toPassTo, NetBuffer msg, bool isInternal)
 		{
 			LidgrenTransferPacket packet = this.BuildTransferPacket(msg);
 
@@ -67,45 +67,132 @@ namespace GladNet.Common
 					}
 			}
 
-			switch((InternalPacketCode)packet.EncryptionMethodByte)
+			PacketBase deserializedPacketBase = InternalPacketConstructor(packet);
+
+			switch(packet.OperationType)
 			{
-				case InternalPacketCode.EncryptionRequest:
-					return EncryptionRegisterFromWire(toPassTo, packet);
+				case Packet.OperationType.Request:
+					return this.ProcessInternalRequest((InternalPacketCode)packet.PacketCode, deserializedPacketBase, toPassTo);
+				case Packet.OperationType.Response:
+					return this.ProcessInternalResponse((InternalPacketCode)packet.PacketCode, deserializedPacketBase, toPassTo);
+				case Packet.OperationType.Event:
+					throw new LoggableException("GladNet currently does not support internal events.", null, Logger.LogType.Error);
 				default:
 					return false;
 			}
 		}
 
-		private bool EncryptionRegisterFromWire(Peer toPassTo, IPackage packet)
+		private PacketBase InternalPacketConstructor(IPackage package)
 		{
-			if (packet.InternalByteRepresentation != null)
+			SerializerBase serializer = this.SerializerRegister[package.SerializerKey];
+
+			if (serializer == null)
 			{
-				EncryptionRequest eq = Serializer<GladNetProtobufNetSerializer>.Instance.
-					Deserialize<PacketBase>(packet.InternalByteRepresentation) as EncryptionRequest;
-
-				if (eq != null)
-				{
-					if (!EncryptionFactory.ContainsKey(eq.EncryptionByteType))
-						ClassLogger.LogError("Failed to establish encryption from Peer ID: "
-							+ toPassTo.UniqueConnectionId + " with EncryptionByte: " + eq.EncryptionByteType);
-
-					EncryptionBase newEncryptionObj = EncryptionFactory[eq.EncryptionByteType]();
-
-					toPassTo.EncryptionRegister.Register(EncryptionFactory[eq.EncryptionByteType](), eq.EncryptionByteType);
-
-					bool result = toPassTo.EncryptionRegister[eq.EncryptionByteType]
-						.SetNetworkInitRequiredData(eq.EncryptionInitInfo);
-
-					if (result)
-					{
-						EncryptionRequest encryptionResponse =
-							new EncryptionRequest(eq.EncryptionByteType, newEncryptionObj.NetworkInitRequiredData());
-
-						toPassTo.SendMessage(Packet.OperationType.Response, encryptionResponse, (byte)InternalPacketCode.EncryptionRequest,
-							Packet.DeliveryMethod.ReliableUnordered, 0, 0, true);
-					}
-				}
+				ClassLogger.LogError("Failed to deserialize internal message with serializer key: " + package.SerializerKey);
+				return null;
 			}
+
+			PacketBase packet = this.Converter.PacketConstructor(package.InternalByteRepresentation, serializer);
+
+			if (packet == null)
+			{
+				ClassLogger.LogError("Recieved a null internal package. Code: {0} SerializerKey: {1}",
+					package.PacketCode, package.SerializerKey);
+			}
+
+			return packet;
+		}
+
+		protected virtual bool ProcessInternalRequest(InternalPacketCode code, PacketBase packet, Peer peer)
+		{
+			switch (code)
+			{
+				case InternalPacketCode.EncryptionRequest:
+					return EncryptionRegisterFromWire(peer, packet);
+				default:
+					return false;
+			}
+		}
+
+		protected virtual bool ProcessInternalResponse(InternalPacketCode code, PacketBase packet, Peer peer)
+		{
+			switch(code)
+			{
+				case InternalPacketCode.EncryptionRequest:
+					return ProcessEncryptionResponse(peer, packet);
+				default:
+					return false;
+			}
+		}
+
+		private bool ProcessEncryptionResponse(Peer peer, PacketBase packet)
+		{
+			EncryptionRequest eq = packet as EncryptionRequest;
+
+			if (eq == null)
+			{
+				ClassLogger.LogError("Recieved encryption request with null packet.");
+				return false;
+			}
+
+			if(!peer.EncryptionRegister.HasKey(eq.EncryptionByteType))
+			{
+				ClassLogger.LogError("Recieved an encryption request response from the server for ByteType: {0} but the client is unaware of that type."
+					, eq.EncryptionByteType);
+				return false;
+			}
+
+			//This will set the server's init info. In the case of the default, for example, it will set the Diffiehelmman public key.
+			//With this the server and client have established a shared secret and can now pass messages, with the IV, to eachother securely.
+			//In the case of a custom method it is User defined and should be referenced.
+			if (peer.EncryptionRegister[eq.EncryptionByteType].SetNetworkInitRequiredData(eq.EncryptionInitInfo))
+			{
+				Action callback = peer.EncryptionRegister[eq.EncryptionByteType].OnEstablished;
+
+				if (callback != null)
+				{
+					callback();
+				}
+
+				return true;
+			}
+			else
+				return false;
+		}
+
+		private bool EncryptionRegisterFromWire(Peer toPassTo, PacketBase packet)
+		{
+			EncryptionRequest eq = packet as EncryptionRequest;
+
+			if(eq == null)
+			{
+				ClassLogger.LogError("Recieved encryption request with null packet.");
+				return false;
+			}
+
+			if (!EncryptionFactory.ContainsKey(eq.EncryptionByteType))
+			{
+				ClassLogger.LogError("Failed to establish encryption from Peer ID: "
+					+ toPassTo.UniqueConnectionId + " with EncryptionByte: " + eq.EncryptionByteType);
+				return false;
+			}
+
+			EncryptionBase newEncryptionObj = EncryptionFactory[eq.EncryptionByteType]();
+
+			toPassTo.EncryptionRegister.Register(EncryptionFactory[eq.EncryptionByteType](), eq.EncryptionByteType);
+
+			bool result = toPassTo.EncryptionRegister[eq.EncryptionByteType]
+				.SetNetworkInitRequiredData(eq.EncryptionInitInfo);
+
+			if (result)
+			{
+				EncryptionRequest encryptionResponse =
+					new EncryptionRequest(eq.EncryptionByteType, newEncryptionObj.NetworkInitRequiredData());
+
+				toPassTo.SendMessage(Packet.OperationType.Response, encryptionResponse, (byte)InternalPacketCode.EncryptionRequest,
+					Packet.DeliveryMethod.ReliableUnordered, 0, 0, true);
+			}
+
 			return false;
 		}
 

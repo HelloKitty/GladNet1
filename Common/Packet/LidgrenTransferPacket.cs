@@ -44,9 +44,13 @@ namespace GladNet.Common
 			get { return this._EncryptionAdditionalBlob; }
 		}
 
-		public bool isEncrypted { get; protected set; }
+		private bool decrypted;
+		public virtual bool isEncrypted
+		{
+			get { return this.EncryptionMethodByte != 0 && !decrypted; }
+		}
 
-		public bool wasEncrypted
+		public virtual bool wasEncrypted
 		{
 			get { return this.EncryptionMethodByte != 0; }
 		}
@@ -69,18 +73,13 @@ namespace GladNet.Common
 			PacketCode = packetCode;
 
 			EncryptionMethodByte = 0;
+			decrypted = false;
 		}
 
 		//Protobuf-net constructor
 		private LidgrenTransferPacket()
 		{
-
-		}
-
-		[ProtoAfterDeserialization]
-		private void SetupForEncryption()
-		{
-			isEncrypted = EncryptionMethodByte != 0;
+			decrypted = false;
 		}
 
 		public override string ToString()
@@ -122,10 +121,9 @@ namespace GladNet.Common
 					this.InternalByteRepresentation = encryptionObject.Decrypt(InternalByteRepresentation,
 						_EncryptionAdditionalBlob);
 
-					isEncrypted = false;
+					decrypted = true;
 
 					return this.InternalByteRepresentation != null;
-
 				}
 				catch(CryptographicException e)
 				{

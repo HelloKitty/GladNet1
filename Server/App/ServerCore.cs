@@ -193,6 +193,7 @@ namespace GladNet.Server
 				//Internally we should register Protobuf-net packets here.
 				
 				Packet.Register(typeof(EmptyPacket), true);
+				Packet.Register(typeof(EncryptionRequest), true);
 
 				//Add in all the custom packets the server uses.
 				RegisterProtobufPackets(Packet.Register);
@@ -358,7 +359,7 @@ namespace GladNet.Server
 			}
 		}
 
-		private void OnRecieveMessage(NetIncomingMessage msg, bool isInternal)
+		protected virtual void OnRecieveMessage(NetIncomingMessage msg, bool isInternal)
 		{
 #if DEBUGBUILD
 			ClassLogger.LogDebug("Recieved a high level message from client ID: " + msg.SenderConnection.RemoteUniqueIdentifier);

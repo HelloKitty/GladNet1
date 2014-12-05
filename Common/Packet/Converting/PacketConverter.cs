@@ -19,7 +19,7 @@ namespace GladNet.Common
 	//TODO: Better support for encryption
 	public class PacketConverter : IPacketConverter
 	{
-		protected PacketBase PacketConstructor(byte[] bytes, SerializerBase serializer)
+		public PacketBase PacketConstructor(byte[] bytes, SerializerBase serializer)
 		{
 			if (bytes != null)
 				return serializer.Deserialize<PacketBase>(bytes);

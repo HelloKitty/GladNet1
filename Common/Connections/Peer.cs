@@ -19,10 +19,19 @@ namespace GladNet.Common
 {
 	public abstract class Peer
 	{
+
+#if UNITYDEBUG || UNITYRELEASE
+		/// <summary>
+		/// Provides a Dictionary/like datastructure to hold encryption object instances.
+		/// </summary>
+		public readonly EncryptionRegister EncryptionRegister;
+#else
+
 		/// <summary>
 		/// Provides a Dictionary/like datastructure to hold encryption object instances.
 		/// </summary>
 		internal readonly EncryptionRegister EncryptionRegister;
+#endif
 
 		public IPEndPoint RemoteConnectionEndpoint { get; private set; }
 		public long UniqueConnectionId { get; private set; }
@@ -73,10 +82,16 @@ namespace GladNet.Common
 		public abstract void PackageRecieve(ResponsePackage package);
 		public abstract void PackageRecieve(EventPackage package);
 
-
+		//Unity does not like calling internals from dlls for some reason.
+#if UNITYDEBUG || UNITYRELEASE
+		protected void InternalOnDisconnection()
+#else
 		internal void InternalOnDisconnection()
+#endif
 		{
-			InternalNetConnection.Disconnect("Disconnecting");
+			if(InternalNetConnection != null)
+				InternalNetConnection.Disconnect("Disconnecting");
+
 			OnDisconnection();
 		}
 
@@ -85,9 +100,9 @@ namespace GladNet.Common
 		//Unity really fucking hates Internal fuck Unity I fucking hate you.
 		//TODO: Implementation encryption functionality
 #if !UNITYDEBUG && !UNITYRELEASE
-		internal Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0, bool isInternal = false)
+		internal virtual Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0, bool isInternal = false)
 #else
-		public Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0, bool isInternal = false)
+		public virtual Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0, bool isInternal = false)
 #endif
 		{
 			try
@@ -114,6 +129,8 @@ namespace GladNet.Common
 			}
 		}
 
+		//This does not need to be in a unity peer. A Unity peer cannot broadcast.
+#if !UNITYDEBUG && !UNITYRELEASE
 		//TODO: One day we will need to optimize the ability to broadcast messages as we'll have to convert to a NetConnection list at some point when it's being called externally through
 		//the exposed API of GladNet.
 		protected void BroadcastEvent(IList<Peer> connections, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
@@ -143,6 +160,7 @@ namespace GladNet.Common
 				throw new LoggableException("Exception occured in serialization of packet.", e, Logger.LogType.Error);
 			}
 		}
+#endif
 
 		private void EncryptionLidgrenPackage(byte encrypt, LidgrenTransferPacket packet)
 		{
