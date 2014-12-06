@@ -25,7 +25,7 @@ namespace GladNet.Common
 
 		public override byte EncryptionTypeByte
 		{
-			get { return 1; }
+			get { return EncryptionBase.DefaultByte; }
 		}
 
 		public override bool SetKeyPublicKey(byte[] pKey)
@@ -141,20 +141,12 @@ namespace GladNet.Common
 
 				secretKey = internalEncryptionObj.DecryptKeyExchange(container.PublicKey);
 
-				Console.WriteLine("DH KeyLength: " + secretKey.Length);
+				/*Console.WriteLine("DH KeyLength: " + secretKey.Length);
 
 				for (int i = 0; i < secretKey.Length; i++)
-					Console.Write(secretKey[i] + " ");
+					Console.Write(secretKey[i] + " ");*/
 
 				Bytes = secretKey;
-
-				/*internalEncryptionObj.DecryptKeyExchange(container.PublicKey);
-
-				internalEncryptionObj.
-
-				secretKey = internalEncryptionObj.ExportParameters(true).X;
-
-				Console.WriteLine("DH KeyLength: " + secretKey.Length);*/
 
 				return secretKey != null;
 			}

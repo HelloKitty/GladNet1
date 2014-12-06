@@ -97,19 +97,19 @@ namespace GladNet.Common
 
 		public abstract void OnDisconnection();
 
-		//Unity really fucking hates Internal fuck Unity I fucking hate you.
+		//Unity really hates Internal. Unity I hate you.
 		//TODO: Implementation encryption functionality
 #if !UNITYDEBUG && !UNITYRELEASE
-		internal virtual Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0, bool isInternal = false)
+		internal virtual Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, byte encrypt = EncryptionBase.NoEncryptionByte, bool isInternal = false)
 #else
-		public virtual Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0, bool isInternal = false)
+		public virtual Packet.SendResult SendMessage(Packet.OperationType type, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, byte encrypt = EncryptionBase.NoEncryptionByte, bool isInternal = false)
 #endif
 		{
 			try
 			{
 				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(type, packet.SerializerKey, packetCode, packet.Serialize());
 
-				if (encrypt != 0)
+				if (encrypt != EncryptionBase.NoEncryptionByte)
 				{
 					EncryptionLidgrenPackage(encrypt, transferPacket);
 				}
@@ -133,13 +133,13 @@ namespace GladNet.Common
 #if !UNITYDEBUG && !UNITYRELEASE
 		//TODO: One day we will need to optimize the ability to broadcast messages as we'll have to convert to a NetConnection list at some point when it's being called externally through
 		//the exposed API of GladNet.
-		protected void BroadcastEvent(IList<Peer> connections, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+		protected void BroadcastEvent(IList<Peer> connections, PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = EncryptionBase.NoEncryptionByte, int channel = 0)
 		{
 			try
 			{
 				LidgrenTransferPacket transferPacket = new LidgrenTransferPacket(Packet.OperationType.Event, packet.SerializerKey, packetCode, packet.Serialize());
 
-				if (encrypt != 0)
+				if (encrypt != EncryptionBase.NoEncryptionByte)
 				{
 					EncryptionLidgrenPackage(encrypt, transferPacket);
 				}

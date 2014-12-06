@@ -19,6 +19,7 @@ namespace GladNet.Client
 		Disconnected,
 		Connecting,
 		FailedToConnect,
-		EncryptionEstablished
+		EncryptionEstablished,
+		NetworkSendError
 	}
 }

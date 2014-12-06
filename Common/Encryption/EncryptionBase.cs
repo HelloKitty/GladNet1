@@ -8,6 +8,9 @@ namespace GladNet.Common
 {
 	public abstract class EncryptionBase : IDisposable
 	{
+		public const byte DefaultByte = 1;
+		public const byte NoEncryptionByte = 0;
+
 		public delegate byte[] Decryptor(byte[] toDecrypt, byte[] additionalBytes);
 		public delegate byte[] Encryptor(byte[] toEncrypt, out byte[] addtionalBytes);
 

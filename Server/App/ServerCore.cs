@@ -92,6 +92,7 @@ namespace GladNet.Server
 			: base()
 		{
 			NetworkMessageHandler = new PacketHandler(loggerInstance);
+			NetworkMessageHandler.Register<DiffieHellmanAESEncryptor>(EncryptionBase.DefaultByte);
 
 			Port = port;
 			UnhandledServerConnections = new List<ConnectionResponse>();

@@ -47,12 +47,12 @@ namespace GladNet.Common
 		private bool decrypted;
 		public virtual bool isEncrypted
 		{
-			get { return this.EncryptionMethodByte != 0 && !decrypted; }
+			get { return this.EncryptionMethodByte != EncryptionBase.NoEncryptionByte && !decrypted; }
 		}
 
 		public virtual bool wasEncrypted
 		{
-			get { return this.EncryptionMethodByte != 0; }
+			get { return this.EncryptionMethodByte != EncryptionBase.NoEncryptionByte; }
 		}
 
 		public LidgrenTransferPacket(Packet.OperationType opType, byte serializationKey, byte packetCode, byte[] messageContents)
@@ -72,7 +72,7 @@ namespace GladNet.Common
 			OperationType = opType;
 			PacketCode = packetCode;
 
-			EncryptionMethodByte = 0;
+			EncryptionMethodByte = EncryptionBase.NoEncryptionByte;
 			decrypted = false;
 		}
 
@@ -114,7 +114,7 @@ namespace GladNet.Common
 
 		public virtual bool Decrypt(EncryptionBase encryptionObject)
 		{
-			if (InternalByteRepresentation != null && EncryptionMethodByte != 0)
+			if (InternalByteRepresentation != null && EncryptionMethodByte != EncryptionBase.NoEncryptionByte)
 			{
 				try
 				{

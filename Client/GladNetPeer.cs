@@ -163,14 +163,20 @@ namespace GladNet.Client
 			return true;
 		}
 
-		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, bool encrypt = false)
+		{
+			return this.SendRequest(packet, packetCode, deliveryMethod, channel, encrypt ? (byte)1 : (byte)0);
+		}
+
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel, byte encrypt)
 		{
 			try
 			{
-				return this.SendMessage(Packet.OperationType.Request, packet, packetCode, deliveryMethod, encrypt, channel);
+				return this.SendMessage(Packet.OperationType.Request, packet, packetCode, deliveryMethod, channel, encrypt);
 			}
 			catch (LoggableException e)
 			{
+				QueueStatusChange(StatusChange.NetworkSendError);
 				throw;
 			}
 		}
@@ -260,9 +266,20 @@ namespace GladNet.Client
 				throw;
 			}
 
-			OnDisconnection();
+			InternalOnDisconnection();
 
 			networkThread = null;
+		}
+
+		#region Encryption Methods
+		/// <summary>
+		/// Attempts to initialize the default encryption method between the server and client
+		/// for secure communications.
+		/// </summary>
+		/// <returns>Indicates if the client requested to establish via a networked message. Does not indicate success.</returns>
+		public bool InitializeEncryption()
+		{
+			return this.Register(new DiffieHellmanAESEncryptor());
 		}
 
 		//This is not needed by the client
@@ -309,6 +326,7 @@ namespace GladNet.Client
 			return this.SendMessage(Packet.OperationType.Request, packet, (byte)InternalPacketCode.EncryptionRequest,
 				Packet.DeliveryMethod.ReliableUnordered, 0, 0, true) != Packet.SendResult.FailedNotConnected;
 		}
+		#endregion
 
 		/// <summary>
 		/// Registers a serializer, a custom serializer, with the network message handler. This will allow for you to
@@ -423,9 +441,7 @@ namespace GladNet.Client
 			//Lock around the Lidgren disconnection too so we can send a disconnected status change manually instead of letting lidgren do it.
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				if (internalLidgrenClient != null)
-					//Should be thread safe and fine to do.
-					internalLidgrenClient.Disconnect("Disconnecting");
+				InternalOnDisconnection();
 				networkPackageQueue.Clear();
 			}	
 		}
