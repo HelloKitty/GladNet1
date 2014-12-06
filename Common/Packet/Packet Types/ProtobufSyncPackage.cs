@@ -21,6 +21,7 @@ namespace GladNet.Common
 	/// Similar approaches may be taken for packet strucutres, not just keys, too.
 	/// A future implementation for this non-default protection will be provided.
 	/// </summary>
+	[Obsolete("Register packets instead.")]
 	[RegisteredPacket]
 	[ProtoContract]
 	internal class ProtobufSyncPackage : Packet

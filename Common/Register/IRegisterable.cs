@@ -19,6 +19,8 @@ namespace GladNet.Common
 		RegisterType this[KeyType key] { get; }
 		bool Register(RegisterType obj, KeyType key);
 		bool UnRegister(KeyType key);
+
+		void Clear();
 	}
 
 	public interface IRegisterable<RegisterType>

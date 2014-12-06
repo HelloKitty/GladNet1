@@ -1,50 +1,12 @@
-GladNet Copyright (C) 2014 Andrew Blakely andrew.blakely@ymail.com
+BSD LICENSE
 
-Distribution and Derivative Works:
+Copyright (c) 2014, Andrew Blakely
+All rights reserved.
 
-You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
-a. You must fully attribute to the orignal development party of GladNet as defined by this license and must acknowledge that attribution requirements are subject to change; and
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
-b. Distributions/Re-distributions must be obtainedable free of charge, that is to say it must be a non-commerial distribution/re-distribution; and
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
 
-c. Derivative works must be obtainedable free of charge, that is to say derivative works must be non-commerial, except if such derivative work's purpose is the direct production of a game or gameserver/gameservice; and
-
-d. The derivative work is not a Networking Library; and
-
-e. You must give any other recipients of the Work or Derivative Works a copy of this License; and
-
-f. You must cause any modified files to carry prominent notices stating that You changed the files; and
-
-g. You must not remove license comments within the source; and
-
-h. It must not be re-distributed or distributed under another name as your own networking library or implying you authored the library
-
-
-Attribution Requirements:
-
-Attribution for any project, non-commerial or commerial, is required if GladNet or a GladNet component is included in any part of the project. This includes cases where forward facing
-clients may not actually reference GladNet but backend components do; in this case it is still required to follow this attribution requirement.
-
-If your project contains a credits portion, or similar, then it is required that under Networking that this message must appear in the same fashion, or larger but still readable: GladNet networking library Copyright (C) 2014 Andrew Blakely
-This attribution must not be intended to be hidden or withheld from end-users. If a credit portions exists it must be reasonable accessible.
-
-If your project does not contain a credits portion then it is required in all public statements about the project that this message appear in similar fashion as stated above: Powered by GladNet networking library Copyright (C) 2014 Andrew Blakely
-
-It is required that you star on GitHub the repository. If you do not have a GitHub account, if applicable by law and GitHub's terms of service, then you must create one to do so.
-
-Trademarks: 
-
-This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
-
-Disclaimer of Warranty:
-
-Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, 
-NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
-
-Limitation of Liability:
-
-In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or 
-consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
-
-end of terms
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

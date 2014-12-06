@@ -35,6 +35,11 @@ namespace GladNet.Server.Connections.Readers
 			throw new LoggableException("ClientPeer recieved a EventPackage but Peer cannot handle this message type.", null, Logger.LogType.Error);
 		}
 
+		public Packet.SendResult SendEvent(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, bool encrypt = false)
+		{
+			return this.SendEvent(packet, packetCode, deliveryMethod, channel, encrypt ? EncryptionBase.DefaultByte : EncryptionBase.NoEncryptionByte);
+		}
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -45,11 +50,11 @@ namespace GladNet.Server.Connections.Readers
 		/// <param name="channel"></param>
 		/// <exception cref="LoggableException">Throws a loggable exception generally when packet serialization fails. You should catch this.</exception>
 		/// <returns></returns>
-		public Packet.SendResult SendEvent(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+		public Packet.SendResult SendEvent(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, byte encrypt = EncryptionBase.NoEncryptionByte)
 		{
 			try
 			{
-				return this.SendMessage(Packet.OperationType.Event, packet, packetCode, deliveryMethod, encrypt, channel);
+				return this.SendMessage(Packet.OperationType.Event, packet, packetCode, deliveryMethod, channel, encrypt);
 			}
 			catch(LoggableException e)
 			{
@@ -67,11 +72,11 @@ namespace GladNet.Server.Connections.Readers
 		/// <param name="channel"></param>
 		/// <exception cref="LoggableException">Throws a loggable exception generally when packet serialization fails. You should catch this.</exception>
 		/// <returns></returns>
-		public Packet.SendResult SendResponse(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+		public Packet.SendResult SendResponse(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, byte encrypt = EncryptionBase.NoEncryptionByte)
 		{
 			try
 			{
-				return this.SendMessage(Packet.OperationType.Response, packet, packetCode, deliveryMethod, encrypt, channel);
+				return this.SendMessage(Packet.OperationType.Response, packet, packetCode, deliveryMethod, channel, encrypt);
 			}
 			catch(LoggableException e)
 			{

@@ -19,8 +19,7 @@ using System.Threading.Tasks;
 
 namespace GladNet.Server
 {
-	public class ConnectionCollection<PeerType, LidgrenType> : IEnumerable<ConnectionPair<LidgrenType, PeerType>>,
-		IRegisterable<ConnectionPair<LidgrenType, PeerType>, long> where PeerType : Peer
+	public class ConnectionCollection<PeerType, LidgrenType> : IConnectionCollection<PeerType, LidgrenType> where PeerType : Peer
 	{
 		private readonly List<PeerType> RegisteredPeers;
 		private readonly List<LidgrenType> RegisteredNetConnections;
@@ -101,6 +100,24 @@ namespace GladNet.Server
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return InternalPeerTable.GetEnumerator();
+		}
+
+		public IList<LidgrenType> ToListOfLidgren()
+		{
+			return RegisteredNetConnections;
+		}
+
+		public IList<PeerType> ToListOfPeer()
+		{
+			return RegisteredPeers;
+		}
+
+
+		public void Clear()
+		{
+			this.InternalPeerTable.Clear();
+			this.RegisteredNetConnections.Clear();
+			this.RegisteredPeers.Clear();
 		}
 	}
 }

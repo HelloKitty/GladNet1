@@ -19,17 +19,16 @@ using System.Threading;
 
 namespace GladNet.Client
 {
-	public sealed class GladNetPeer : MessageReciever, ILoggable
+	public sealed class GladNetPeer : Peer, ILoggable
 	{
 		#region Package Action Queue
-		private object networkIncomingEnqueueSyncObj;
+		private readonly object networkIncomingEnqueueSyncObj;
 		//TODO: Explore the GC pressure that a queue of Actions, with lambdas creating them, causes.
-		private Queue<Action> networkPackageQueue;
+		private readonly Queue<Action> networkPackageQueue;
 		#endregion
 
 		#region Lidgren Network Objects
 		private NetClient internalLidgrenClient;
-		private NetConnection internalNetConnection;
 		#endregion
 
 		public Logger ClassLogger { get; private set; }
@@ -40,33 +39,38 @@ namespace GladNet.Client
 
 		private volatile bool _isConnected;
 
-		public bool isConnected
-		{
-			get { return _isConnected; }
-		}
+		private readonly ClientPacketHandler NetworkMessageHandler;
 
 		private double timeNowByPoll = 0;
 		private double timeNowByPollComparer = 0;
 
 #if UNITYDEBUG || UNITYRELEASE
 		public GladNetPeer(IListener listener, Logger logger = null)
+					: base(null)
 		{
+			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
+
+			NetworkMessageHandler = new ClientPacketHandler(ClassLogger);
+
 			RecieverListener = listener;
 			//Call the interface method to register the packets.
 			RegisterProtobufPackets(Packet.Register);
-
+		
 			//This registers the default serializer
-			this.SerializerRegister.Register(Serializer<GladNetProtobufNetSerializer>.Instance, Serializer<GladNetProtobufNetSerializer>.Instance.SerializerUniqueKey);
+			NetworkMessageHandler.Register<GladNetProtobufNetSerializer>();
 
-			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
+
 			networkPackageQueue = new Queue<Action>(20);
 			networkIncomingEnqueueSyncObj = new object();
 			internalLidgrenClient = null;
 			_isConnected = false;
 		}
 #else
-		public GladNetPeer(IListener listener, Logger logger)
+		public GladNetPeer(IListener listener, Logger logger) 
+			: base(null)
 		{
+			NetworkMessageHandler = new ClientPacketHandler(logger);
+
 			RecieverListener = listener;
 			//Call the interface method to register the packets.
 			RegisterProtobufPackets(Packet.Register);
@@ -74,7 +78,7 @@ namespace GladNet.Client
 			ClassLogger = logger;
 
 			//This registers the default serializer
-			this.SerializerRegister.Register(Serializer<GladNetProtobufNetSerializer>.Instance, Serializer<GladNetProtobufNetSerializer>.Instance.SerializerUniqueKey);
+			NetworkMessageHandler.Register<GladNetProtobufNetSerializer>();
 
 			networkPackageQueue = new Queue<Action>(20);
 			networkIncomingEnqueueSyncObj = new object();
@@ -89,20 +93,28 @@ namespace GladNet.Client
 		/// <returns></returns>
 		public bool Poll()
 		{
-			lock (this.networkIncomingEnqueueSyncObj)
-			{
-				while (networkPackageQueue.Count != 0)
-				{
-					//Invokes the underlying Action delegate contained in the queue
-					//We don't test nullness for preformance and because it should NEVER be null
-					//A crash is likely to happen elsewhere on the logical chain leading to this being null.
-					networkPackageQueue.Dequeue()();
-				}
-			}
-
+			//We should do this as soon as Poll is called since the network thread will stop if we hold off too long
 			//Sets the NetTime for the network thread to read. If it's much less then NetTime.Now then the network thread shuts down
 			//This will happen if we don't poll often.
 			Interlocked.Exchange(ref timeNowByPoll, NetTime.Now);
+
+			Action action;
+			int count = networkPackageQueue.Count;
+
+			//We're the only ones touching the networkPackageQueue other than the producer so it shouldn't ever be
+			//consumed while we dequeue it.
+			for(int i = 0; i < count; i++)
+			{
+				lock (this.networkIncomingEnqueueSyncObj)
+				{
+					//For less locking, and for not holding the lock ALL THE WAY DOWN THE STACK like before we invoke it outside the lock down below.
+					action = networkPackageQueue.Dequeue();
+				}
+
+				//We don't test nullness for preformance and because it should NEVER be null
+				action();
+			}
+
 
 			if (_isConnected == false)
 			{
@@ -140,10 +152,33 @@ namespace GladNet.Client
 
 			NetOutgoingMessage msg = GenerateClientHail(hailMessage);
 
-			internalNetConnection = internalLidgrenClient.Connect(new IPEndPoint(IPAddress.Parse(ip), port), msg);
+			IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(ip), port);
+
+			NetConnection connection = internalLidgrenClient.Connect(endPoint, msg);
+
+			this.SetConnectionDetails(connection, endPoint, connection.RemoteUniqueIdentifier);
+
 			_isConnected = true;
 
 			return true;
+		}
+
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, bool encrypt = false)
+		{
+			return this.SendRequest(packet, packetCode, deliveryMethod, channel, encrypt ? (byte)1 : (byte)0);
+		}
+
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel, byte encrypt)
+		{
+			try
+			{
+				return this.SendMessage(Packet.OperationType.Request, packet, packetCode, deliveryMethod, channel, encrypt);
+			}
+			catch (LoggableException e)
+			{
+				QueueStatusChange(StatusChange.NetworkSendError);
+				throw;
+			}
 		}
 
 		public void StartListener()
@@ -197,7 +232,7 @@ namespace GladNet.Client
 						_isConnected = false;
 						if (internalLidgrenClient != null)
 							//Should be thread safe and fine to do.
-							internalLidgrenClient.Disconnect("Disconnecting");
+							this.InternalOnDisconnection();
 					}
 
 					if (msg != null)
@@ -213,7 +248,7 @@ namespace GladNet.Client
 						//This is because we have a Queue<Action> and thus we can't possibly catch the exception coming from the main thread via the lambda generated Action instance.
 						catch (NullReferenceException e)
 						{
-							ClassLogger.LogError("Error occurred during polling: " + e.Message);
+							ClassLogger.LogError("Error occurred during polling: " + e.Message + " StackTrace: " + e.StackTrace + " Source: " + e.Source);
 							//If we hit this point it generally means that the object has gone out of scope for some reason without disconnecting (usually in Unity going from playmode
 							//to the editor so at this point we should just catch it and let the application and thread die.
 							_isConnected = false;
@@ -221,13 +256,87 @@ namespace GladNet.Client
 					}
 				}
 			}
+			catch(LoggableException e)
+			{
+				ClassLogger.LogError(e.Message + e.InnerException != null ? "Inner: " + e.InnerException : "");
+			}
 			catch(Exception e)
 			{
 				ClassLogger.LogError(e.Message + e.Data);
 				throw;
 			}
 
+			InternalOnDisconnection();
+
 			networkThread = null;
+		}
+
+		#region Encryption Methods
+		/// <summary>
+		/// Attempts to initialize the default encryption method between the server and client
+		/// for secure communications.
+		/// </summary>
+		/// <returns>Indicates if the client requested to establish via a networked message. Does not indicate success.</returns>
+		public bool InitializeEncryption()
+		{
+			return this.Register(new DiffieHellmanAESEncryptor());
+		}
+
+		//This is not needed by the client
+		/// <summary>
+		/// Registers an encryption object. This will request that the encryption be established by sending a message to the server.
+		/// Do not try to register an encryption object if you are not connected.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="encryptorInstance"></param>
+		/// <returns></returns>
+		public bool Register<T>(T encryptorInstance) where T : EncryptionBase
+		{
+			if(encryptorInstance == null)
+			{
+				ClassLogger.LogError("Cannot register a null encryption object.");
+				return false;
+			}
+
+			if(this.EncryptionRegister.HasKey(encryptorInstance.EncryptionTypeByte))
+			{
+				ClassLogger.LogError("Tried to register an already known encryption object.");
+				return false;
+			}
+
+			if(!isConnected || RecieverListener == null)
+			{
+				ClassLogger.LogError("Cannot register encryption objects when not connected.");
+				return false;
+			}
+
+			//Set the callback for when the server acknowledges our encryption request.
+			encryptorInstance.OnEstablished += () =>
+			{
+				lock (networkIncomingEnqueueSyncObj)
+				{
+					this.networkPackageQueue.Enqueue(() => { RecieverListener.OnStatusChange(StatusChange.EncryptionEstablished); });
+				}
+			};
+
+			this.EncryptionRegister.Register(encryptorInstance, encryptorInstance.EncryptionTypeByte);
+
+			PacketBase packet = new EncryptionRequest(encryptorInstance.EncryptionTypeByte, encryptorInstance.NetworkInitRequiredData());
+
+			return this.SendMessage(Packet.OperationType.Request, packet, (byte)InternalPacketCode.EncryptionRequest,
+				Packet.DeliveryMethod.ReliableUnordered, 0, 0, true) != Packet.SendResult.FailedNotConnected;
+		}
+		#endregion
+
+		/// <summary>
+		/// Registers a serializer, a custom serializer, with the network message handler. This will allow for you to
+		/// register serializers other than Protobuf-net
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		public bool Register<T>() where T : SerializerBase
+		{
+			return this.NetworkMessageHandler.Register<T>();
 		}
 
 		private void ServiceLidgrenMessage(NetIncomingMessage msg)
@@ -257,11 +366,13 @@ namespace GladNet.Client
 							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
-
+				//We can take advantage of using the same logic for both cases.
+				//All that changes is we till the handler it is an internal message for a Data message type.
 				case NetIncomingMessageType.ExternalHighlevelMessage:
+				case NetIncomingMessageType.Data:
 					try
 					{
-						HandleExternalHighLevelMessage(msg);
+						this.NetworkMessageHandler.DispatchMessage(this, msg, msg.MessageType == NetIncomingMessageType.Data);
 					}
 					catch(LoggableException e)
 					{
@@ -270,77 +381,6 @@ namespace GladNet.Client
 							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
-			}
-		}
-
-		private void HandleExternalHighLevelMessage(NetIncomingMessage msg)
-		{
-			//TODO: Investigate GC pressure of this byte[] generation. It could be hairy in Unity.
-			LidgrenTransferPacket transferPacket = GenerateTransferPacket(msg.ReadBytes(msg.LengthBytes - msg.PositionInBytes));
-
-			if(transferPacket == null)
-			{
-				ClassLogger.LogDebug("Recieved a null transfer packet for highlevel message response. This may be the unlikely scenario of package corruption.");
-				return;
-			}
-
-			try
-			{
-				switch (transferPacket.OperationType)
-				{
-					case Packet.OperationType.Event:
-						EventPackage ePackage = this.Converter.BuildIncomingNetPackage<EventPackage>(transferPacket, SerializerRegister[transferPacket.SerializerKey]);
-
-						if (ePackage != null)
-							this.RecieverListener.RecievePackage(ePackage);
-#if DEBUG || UNITYDEBUG
-						else
-							ClassLogger.LogError("Failed to create EventPackage.");
-#endif
-						break;
-
-					case Packet.OperationType.Response:
-						ResponsePackage rPackage = this.Converter.BuildIncomingNetPackage<ResponsePackage>(transferPacket, SerializerRegister[transferPacket.SerializerKey]);
-
-						if (rPackage != null)
-							this.RecieverListener.RecievePackage(rPackage);
-#if DEBUG || UNITYDEBUG
-						else
-							ClassLogger.LogError("Failed to create ResponsePackage.");
-#endif
-						break;
-
-					default:
-						//Malicious party could send a fake package. Don't crash the app just for that.
-						//Plus it could just be data corruption. Nothing can be done.
-#if DEBUG || UNITYDEBUG
-						ClassLogger.LogError("Recieved an unhandlable OperationType for a packet. Type: " + transferPacket.OperationType.ToString());
-#endif
-						break;
-				}
-			}
-			catch(NullReferenceException e)
-			{
-			//Malicious party could send a fake package. Don't crash the app just for that.
-			//Plus it could just be data corruption. Nothing can be done.
-#if DEBUG || UNITYDEBUG
-				ClassLogger.LogError("Recieved a packet from server with SerializationKey: {0} which has not registered serializer.", transferPacket.SerializerKey);
-#else
-				ClassLogger.LogDebug("Recieved a packet from server with SerializationKey: {0} which has not registered serializer.", transferPacket.SerializerKey);
-#endif
-			}
-		}
-
-		private LidgrenTransferPacket GenerateTransferPacket(byte[] bytes)
-		{
-			try
-			{
-				return Serializer<GladNetProtobufNetSerializer>.Instance.Deserialize<LidgrenTransferPacket>(bytes);
-			}
-			catch (LoggableException e)
-			{
-				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
-				return null;
 			}
 		}
 
@@ -401,38 +441,12 @@ namespace GladNet.Client
 			//Lock around the Lidgren disconnection too so we can send a disconnected status change manually instead of letting lidgren do it.
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				if (internalLidgrenClient != null)
-					//Should be thread safe and fine to do.
-					internalLidgrenClient.Disconnect("Disconnecting");
+				InternalOnDisconnection();
 				networkPackageQueue.Clear();
 			}	
 		}
 
-/*//If we're not in unity there is no reason for a deconstructor
-#if UNITYDEBUG || UNITYRELEASE
-		//A deconstructor in C#? I too like to live dangerously...
-		//Why is this here? This exists to stop the network thread from spinnning
-		//in cases where the user leaves playmode in the Unity3D editor before disconnecting.
-		~GladNetPeer()
-		{
-			_isConnected = false;
-			try
-			{
-
-			#if UNITYDEBUG
-				this.ClassLogger.LogDebug("Stopping network thread.");
-			#endif
-	
-				networkThread.Abort();
-			}
-			catch(Exception e)
-			{
-				//Catch anything and everything because we're in the editor and all bets are off
-			}
-		}
-#endif*/
-
-		protected override void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
+		private void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
 		{
 			if (RecieverListener == null)
 			{
@@ -444,6 +458,7 @@ namespace GladNet.Client
 			{
 				//Registering the empty packet
 				Packet.Register(typeof(EmptyPacket), true);
+				Packet.Register(typeof(EncryptionRequest), true);
 
 				Packet.SetupProtoRuntimePacketInheritance();
 				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);	
@@ -454,31 +469,40 @@ namespace GladNet.Client
 				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
 			}
 		}
-		
-		//TODO: Implementation encryption functionality
-		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, byte encrypt = 0, int channel = 0)
+
+		public bool RegisterProtobufPacket(Type t)
 		{
-			try
+			return Packet.Register(t, false);
+		}
+
+		#region Peer Implementation
+		public override void PackageRecieve(RequestPackage package)
+		{
+			throw new LoggableException("Recieved a request package but a client cannot handle such a package.", null, Logger.LogType.Error);
+		}
+
+		public override void PackageRecieve(ResponsePackage package)
+		{
+			lock(networkIncomingEnqueueSyncObj)
 			{
-				LidgrenTransferPacket transferPacket = 
-					new LidgrenTransferPacket(Packet.OperationType.Request, encrypt, packet.SerializerKey, packetCode, packet.Serialize());
-
-				byte[] bytes = Serializer<GladNetProtobufNetSerializer>.Instance.Serialize(transferPacket);
-
-				NetOutgoingMessage msg = this.internalLidgrenClient.CreateMessage(bytes.Length + 1);
-
-				msg.Write((byte)255);
-				msg.Write(bytes);
-
-				return (Packet.SendResult)this.internalLidgrenClient.SendMessage(msg, Packet.LidgrenDeliveryMethodConvert(deliveryMethod), channel);
-			}
-			catch(Exception e)
-			{
-				ClassLogger.LogError("SendRequest failed to execute. This could be an issue with serialization or may be the result of a null packet being sent." +
-					e.Message + (e.InnerException == null ? "" : e.InnerException.Message));
-				//It is ok to crash the application since this should only ever be the result of poor compile-time logic. No malicious party could cause this.
-				throw;
+				networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
 			}
 		}
+
+		public override void PackageRecieve(EventPackage package)
+		{
+			lock (networkIncomingEnqueueSyncObj)
+			{
+				networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
+			}
+		}
+
+		public override void OnDisconnection()
+		{
+			//We need to clear the register so on reconnects we don't try to re-add or re-use old stale encryption objects.
+			this.EncryptionRegister.Clear();
+		}
+
+		#endregion
 	}
 }

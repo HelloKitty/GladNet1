@@ -68,5 +68,11 @@ namespace Common.Packet.Serializers
 		{
 			get { return GetValue(key); }
 		}
+
+
+		public void Clear()
+		{
+			this.RegisteredSerializers.Clear();
+		}
 	}
 }

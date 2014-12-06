@@ -18,11 +18,12 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;DEBUG DEBUGBUILD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <NoWarn>0168</NoWarn>
+    <NoWarn>3021</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,16 +32,19 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>3021</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnityDebug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\UnityDebug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;UNITYDEBUG</DefineConstants>
-    <NoWarn>0168</NoWarn>
+    <DefineConstants>TRACE;DEBUG;UNITYDEBUG DEBUG DEBUGBUILD</DefineConstants>
+    <NoWarn>3021</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Lidgren.Network">
@@ -60,20 +64,47 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connections\IConnectionDetails.cs" />
+    <Compile Include="Connections\Peer.cs" />
+    <Compile Include="Encryption\Encryption Methods\DiffieHellmanAESEncryptor.cs" />
+    <Compile Include="Encryption\Encryption Methods\DiffieHellmanWireContainer.cs" />
+    <Compile Include="Encryption\EncryptionBase.cs" />
+    <Compile Include="Encryption\EncryptionRegister.cs" />
+    <Compile Include="Encryption\IEncryptable.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\DHKeyGeneration.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\DHParameters.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\DiffieHellman.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\DiffieHellmanManaged.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\BigInteger.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\ConfidenceFactor.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\MiniParser.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\NextPrimeFinder.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\PrimalityTests.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\PrimeGeneratorBase.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\SecurityParser.cs" />
+    <Compile Include="Encryption\Mentalis DiffieHellman\Mono\SequentialSearchPrimeGeneratorBase.cs" />
     <Compile Include="Exceptions\LoggableException.cs" />
     <Compile Include="Exceptions\SerializationException.cs" />
     <Compile Include="Logging\ILoggable.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\Loggers\ConsoleLogger.cs" />
-    <Compile Include="Packet\Handlers\Handler.cs" />
+    <Compile Include="Packet\Converting\IPacketConverter.cs" />
+    <Compile Include="Packet\Handlers\IHandler.cs" />
     <Compile Include="Packet\Handlers\MessageReciever.cs" />
-    <Compile Include="Packet\Handlers\Packet\PacketConverter.cs" />
+    <Compile Include="Packet\Converting\PacketConverter.cs" />
+    <Compile Include="Packet\Converting\IConverter.cs" />
+    <Compile Include="Packet\Encryption\IEncryptablePackage.cs" />
+    <Compile Include="Packet\Handlers\Packet\PacketHandler.cs" />
+    <Compile Include="Packet\Handlers\Packet\PacketParser.cs" />
+    <Compile Include="Packet\IPackage.cs" />
     <Compile Include="Packet\LidgrenTransferPacket.cs" />
     <Compile Include="Packet\Packages\RequestPackage.cs" />
     <Compile Include="Packet\Packages\ResponsePackage.cs" />
     <Compile Include="Packet\Packages\EventPackage.cs" />
     <Compile Include="Packet\Packages\NetworkPackage.cs" />
     <Compile Include="Packet\Packet Types\EmptyPacket.cs" />
+    <Compile Include="Packet\Packet Types\EncryptionRequest.cs" />
+    <Compile Include="Packet\Packet Types\InternalPacketCodes.cs" />
     <Compile Include="Packet\Packet Types\ProtobufSyncPackage.cs" />
     <Compile Include="Packet\Packet.cs" />
     <Compile Include="Packet\PacketAttribute.cs" />
@@ -90,7 +121,9 @@
     <None Include="packages.config" />
     <None Include="ProjectHeader.licenseheader" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Message Handling\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

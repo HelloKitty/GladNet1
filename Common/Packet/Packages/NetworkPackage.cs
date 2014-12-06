@@ -15,15 +15,14 @@ namespace GladNet.Common
 {
 	public class NetworkPackage
 	{
-		public bool wasEncrypted { get; protected set; }
+		public byte EncryptionMethodByte { get; internal set; }
 		public byte Code { get; protected set; }
 		public PacketBase PacketObject { get; protected set; }
 
-		public void FillPackage(PacketBase packet, byte code, bool encrypted)
+		public void FillPackage(PacketBase packet, byte code)
 		{
 			PacketObject = packet;
 			Code = code;
-			wasEncrypted = encrypted;
 		}
 	}
 }

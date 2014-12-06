@@ -10,27 +10,23 @@ using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace GladNet.Common
 {
 	//TODO: Mark internal after testing.
 	[ProtoContract]
-	public class LidgrenTransferPacket
+	public class LidgrenTransferPacket : IEncryptablePackage
 	{
 		[ProtoMember(1, IsRequired = true)]
-		private byte[] internalHighLevelMessageRepresentation;
+		public byte[] InternalByteRepresentation { get; protected set; }
 
 		[ProtoMember(2)]
-		private byte _OperationType;
-
-		public Packet.OperationType OperationType
-		{
-			get { return (Packet.OperationType)_OperationType; }
-		}
+		public Packet.OperationType OperationType { get; private set; }
 
 		[ProtoMember(3)]
-		public byte EncryptionMethod { get; private set; }
+		public byte EncryptionMethodByte { get; protected set; }
 
 		[ProtoMember(4)]
 		public byte SerializerKey { get; private set; }
@@ -38,19 +34,33 @@ namespace GladNet.Common
 		[ProtoMember(5)]
 		public byte PacketCode { get; private set; }
 
-		public bool wasEncrypted
+		[ProtoMember(6, IsRequired = false)]
+		private byte[] _EncryptionAdditionalBlob;
+		/// <summary>
+		/// This will cost us nothing if it's not needed and set to null in Protobufnet
+		/// </summary>
+		public byte[] EncryptionAdditionalBlob
 		{
-			get { return EncryptionMethod != 0; }
+			get { return this._EncryptionAdditionalBlob; }
 		}
 
-		public bool isDecrypted { get; private set;}
+		private bool decrypted;
+		public virtual bool isEncrypted
+		{
+			get { return this.EncryptionMethodByte != EncryptionBase.NoEncryptionByte && !decrypted; }
+		}
 
-		public LidgrenTransferPacket(Packet.OperationType opType, byte encryptionMethod, byte serializationKey, byte packetCode, byte[] messageContents)
+		public virtual bool wasEncrypted
+		{
+			get { return this.EncryptionMethodByte != EncryptionBase.NoEncryptionByte; }
+		}
+
+		public LidgrenTransferPacket(Packet.OperationType opType, byte serializationKey, byte packetCode, byte[] messageContents)
 		{
 			//If someone chooses not to pass a packet then we'll use the empty packet.
 			if(messageContents != null)
 			{
-				internalHighLevelMessageRepresentation = messageContents;
+				InternalByteRepresentation = messageContents;
 				SerializerKey = serializationKey;
 			}
 			else
@@ -59,21 +69,69 @@ namespace GladNet.Common
 				serializationKey = Serializer<GladNetProtobufNetSerializer>.Instance.SerializerUniqueKey;
 			}
 
-			_OperationType = (byte)opType;
-			encryptionMethod = EncryptionMethod;
-
+			OperationType = opType;
 			PacketCode = packetCode;
-		}
 
-		public byte[] GetInternalBytes()
-		{
-			return internalHighLevelMessageRepresentation;
+			EncryptionMethodByte = EncryptionBase.NoEncryptionByte;
+			decrypted = false;
 		}
 
 		//Protobuf-net constructor
 		private LidgrenTransferPacket()
 		{
-			isDecrypted = false;
+			decrypted = false;
+		}
+
+		public override string ToString()
+		{
+			StringBuilder builder = new StringBuilder("LidgrenTransferPacket - ");
+
+			builder.AppendFormat("OperationType: {0} PacketCode: {1} EncryptionMethod: {2} SerializerKey: {3}",
+				this.OperationType.ToString(), this.PacketCode, this.EncryptionMethodByte, this.SerializerKey);
+
+			return builder.ToString();
+		}
+
+		public virtual void Encrypt(EncryptionBase encryptionObject)
+		{
+			if (InternalByteRepresentation != null)
+			{
+				//Sets the encryption method used via  byte so remote recievers will know how to handle the
+				//encrypted byte[]
+				this.EncryptionMethodByte = encryptionObject.EncryptionTypeByte;
+
+				try
+				{
+					this.InternalByteRepresentation = encryptionObject.Encrypt(InternalByteRepresentation,
+						out _EncryptionAdditionalBlob);
+				}
+				catch (CryptographicException e)
+				{
+					throw new LoggableException("Failed to encrypt LidgrenPacket: " + this.ToString(), e, Logger.LogType.Error);
+				}
+			}
+		}
+
+		public virtual bool Decrypt(EncryptionBase encryptionObject)
+		{
+			if (InternalByteRepresentation != null && EncryptionMethodByte != EncryptionBase.NoEncryptionByte)
+			{
+				try
+				{
+					this.InternalByteRepresentation = encryptionObject.Decrypt(InternalByteRepresentation,
+						_EncryptionAdditionalBlob);
+
+					decrypted = true;
+
+					return this.InternalByteRepresentation != null;
+				}
+				catch(CryptographicException e)
+				{
+					throw new LoggableException("Failed to decrypt LidgrenPacket: " + this.ToString(), e, Logger.LogType.Error);
+				}
+			}
+			else
+				return false;
 		}
 	}
 }
