@@ -20,6 +20,7 @@ namespace Application__GUI_
 	{
 		private AboutForm aboutForm = null;
 		private ConfigGenerator configGenerator = null;
+		private readonly object processUpdateSyncObj = new object();
 
 		Dictionary<string, ConfigInformation> ConfigDictionary = new Dictionary<string, ConfigInformation>();
 		ConcurrentDictionary<int, ServerProcess> ServerProcesses = new ConcurrentDictionary<int, ServerProcess>();
@@ -141,11 +142,11 @@ namespace Application__GUI_
 
 			//Remove the sever process from the process list on exited.
 			sProcess.OnExited += () =>
-			{		
-				StopServerProcess(sProcess);
-				ServerProcess proc;
-				ServerProcesses.TryRemove(sProcess.UniqueProcessID, out proc);
-				this.UpdateProcessList();
+			{
+					StopServerProcess(sProcess);
+					ServerProcess proc;
+					ServerProcesses.TryRemove(sProcess.UniqueProcessID, out proc);
+					this.UpdateProcessList();
 			};
 
 			this.ServerProcesses.TryAdd(sProcess.UniqueProcessID, sProcess);
@@ -154,13 +155,16 @@ namespace Application__GUI_
 
 		private void UpdateProcessList()
 		{
-			this.runningServerList.Items.Clear();
+			lock (processUpdateSyncObj)
+			{
+				this.runningServerList.Items.Clear();
 
-			if(ServerProcesses.Count != 0)
-				foreach(var kp in ServerProcesses)
-				{
-					runningServerList.Items.Add(kp.Value.UniqueProcessID + ": " + kp.Value.Config.DLLName);
-				}
+				if (ServerProcesses.Count != 0)
+					foreach (var kp in ServerProcesses)
+					{
+						runningServerList.Items.Add(kp.Value.UniqueProcessID + ": " + kp.Value.Config.DLLName);
+					}
+			}
 		}
 
 		private void button2_Click(object sender, EventArgs e)
