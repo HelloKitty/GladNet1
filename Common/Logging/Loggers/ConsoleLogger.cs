@@ -11,8 +11,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
-namespace Common.Logging.Loggers
+namespace GladNet.Common.Logging.Loggers
 {
 	public class ConsoleLogger : Logger
 	{

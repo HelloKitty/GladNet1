@@ -113,12 +113,24 @@ namespace GladNet.Client
 
 				//We don't test nullness for preformance and because it should NEVER be null
 				action();
+
+				//For the time being we do not want to catch exceptions generated from the delegate.
+				/*try
+				{
+					action();
+				}
+				catch(NullReferenceException e)
+				{
+					this.ClassLogger.LogError("Error in poll. Action from Queue was null: " + e.Message);
+				}*/
 			}
 
 
 			if (_isConnected == false)
 			{
-				RecieverListener.OnStatusChange(StatusChange.Disconnected);
+				if(RecieverListener != null)
+					RecieverListener.OnStatusChange(StatusChange.Disconnected);
+
 				return false;
 			}
 
@@ -232,7 +244,7 @@ namespace GladNet.Client
 						_isConnected = false;
 						if (internalLidgrenClient != null)
 							//Should be thread safe and fine to do.
-							this.InternalOnDisconnection();
+							this.Disconnect();
 					}
 
 					if (msg != null)
@@ -266,7 +278,7 @@ namespace GladNet.Client
 				throw;
 			}
 
-			InternalOnDisconnection();
+			Disconnect();
 
 			networkThread = null;
 		}
@@ -406,7 +418,8 @@ namespace GladNet.Client
 		{
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				networkPackageQueue.Enqueue(() => this.RecieverListener.OnStatusChange(change));
+				if(RecieverListener != null)
+					networkPackageQueue.Enqueue(() => this.RecieverListener.OnStatusChange(change));
 			}
 		}
 
@@ -433,7 +446,7 @@ namespace GladNet.Client
 			}
 		}
 
-		public void Disconnect()
+		public override void Disconnect()
 		{
 			_isConnected = false;
 
@@ -441,7 +454,7 @@ namespace GladNet.Client
 			//Lock around the Lidgren disconnection too so we can send a disconnected status change manually instead of letting lidgren do it.
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				InternalOnDisconnection();
+				this.OnDisconnection();
 				networkPackageQueue.Clear();
 			}	
 		}
@@ -485,7 +498,8 @@ namespace GladNet.Client
 		{
 			lock(networkIncomingEnqueueSyncObj)
 			{
-				networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
+				if (RecieverListener != null)
+					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
 			}
 		}
 
@@ -493,11 +507,12 @@ namespace GladNet.Client
 		{
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
+				if(RecieverListener != null)
+					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
 			}
 		}
 
-		public override void OnDisconnection()
+		protected override void OnDisconnection()
 		{
 			//We need to clear the register so on reconnects we don't try to re-add or re-use old stale encryption objects.
 			this.EncryptionRegister.Clear();

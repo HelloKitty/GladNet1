@@ -1,4 +1,4 @@
-﻿using Common.Packet.Serializers;
+﻿using GladNet.Common.Serializers;
 using GladNet.Server.Logging;
 using Lidgren.Network;
 using System;

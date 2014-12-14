@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace GladNet.Common
 {
@@ -82,12 +81,7 @@ namespace GladNet.Common
 		public abstract void PackageRecieve(ResponsePackage package);
 		public abstract void PackageRecieve(EventPackage package);
 
-		//Unity does not like calling internals from dlls for some reason.
-#if UNITYDEBUG || UNITYRELEASE
-		protected void InternalOnDisconnection()
-#else
-		internal void InternalOnDisconnection()
-#endif
+		public virtual void Disconnect()
 		{
 			if(InternalNetConnection != null)
 				InternalNetConnection.Disconnect("Disconnecting");
@@ -95,7 +89,7 @@ namespace GladNet.Common
 			OnDisconnection();
 		}
 
-		public abstract void OnDisconnection();
+		protected abstract void OnDisconnection();
 
 		//Unity really hates Internal. Unity I hate you.
 		//TODO: Implementation encryption functionality

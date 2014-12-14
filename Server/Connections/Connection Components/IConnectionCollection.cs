@@ -10,7 +10,7 @@ namespace GladNet.Server
 	public interface IConnectionCollection<PeerType, LidgrenType> : IEnumerable<ConnectionPair<LidgrenType, PeerType>>,
 		IRegisterable<ConnectionPair<LidgrenType, PeerType>, long> where PeerType : Peer
 	{
-		IList<LidgrenType> ToListOfLidgren();
-		IList<PeerType> ToListOfPeer();
+		IReadOnlyList<LidgrenType> ToListOfLidgren();
+		IReadOnlyList<PeerType> ToListOfPeer();
 	}
 }

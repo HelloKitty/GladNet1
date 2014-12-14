@@ -12,17 +12,17 @@ C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\bin
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\obj\Debug\Server.dll
 C:\Users\Andrew Blakely\Documents\Lidgren Based Neworking Lib\GladNet\Server\obj\Debug\Server.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Server.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Server.pdb
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Common.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Lidgren.Network.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\protobuf-net.dll
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\System.Threading.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Common.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\Lidgren.Network.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\protobuf-net.pdb
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\protobuf-net.xml
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\System.Threading.xml
 C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.csprojResolveAssemblyReference.cache
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.dll
-C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\Server.pdb
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\GladNet.Common.dll
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\GladNet.Common.pdb
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\GladNet.Server.dll
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\bin\Debug\GladNet.Server.pdb
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\GladNet.Server.dll
+C:\Users\Andrew Blakely\Documents\GitHub\gladnet\Server\obj\Debug\GladNet.Server.pdb
