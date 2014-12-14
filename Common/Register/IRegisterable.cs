@@ -6,7 +6,7 @@
 /// Please refer to the repo License file for licensing information
 /// If this source code has been distributed without a copy of the original license file then this is an illegal copy and you should delete it
 #endregion
-using Common.Register;
+using GladNet.Common.Register;
 using System;
 using System.Collections.Generic;
 using System.Linq;

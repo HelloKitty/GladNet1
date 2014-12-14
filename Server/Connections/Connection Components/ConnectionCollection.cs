@@ -6,7 +6,7 @@
 /// Please refer to the repo License file for licensing information
 /// If this source code has been distributed without a copy of the original license file then this is an illegal copy and you should delete it
 #endregion
-using Common.Register;
+using GladNet.Common.Register;
 using GladNet.Common;
 using Lidgren.Network;
 using System;
@@ -102,12 +102,12 @@ namespace GladNet.Server
 			return InternalPeerTable.GetEnumerator();
 		}
 
-		public IList<LidgrenType> ToListOfLidgren()
+		public IReadOnlyList<LidgrenType> ToListOfLidgren()
 		{
 			return RegisteredNetConnections;
 		}
 
-		public IList<PeerType> ToListOfPeer()
+		public IReadOnlyList<PeerType> ToListOfPeer()
 		{
 			return RegisteredPeers;
 		}

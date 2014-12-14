@@ -7,7 +7,7 @@
 /// If this source code has been distributed without a copy of the original license file then this is an illegal copy and you should delete it
 #endregion
 using Common.Exceptions;
-using Common.Packet.Serializers;
+using GladNet.Common.Serializers;
 using GladNet.Common;
 using GladNet.Server.Connections;
 using GladNet.Server.Connections.Readers;
@@ -33,7 +33,7 @@ using System.Threading.Tasks;
 namespace GladNet.Server
 {
 
-	internal class CoreAttribute : Attribute
+	public class CoreAttribute : Attribute
 	{
 		//Empty
 		//This is just used to easily find the class that implements this base class in loaded assemblies.
@@ -56,12 +56,12 @@ namespace GladNet.Server
 		#region Connection collection properites and objects
 		public IReadOnlyList<ServerPeer> ServerPeers
 		{
-			get { return (List<ServerPeer>)ServerConnections; }
+			get { return ServerConnections.ToListOfPeer(); }
 		}
 
 		public IReadOnlyList<ClientPeer> ClientPeers
 		{
-			get { return (List<ClientPeer>)ServerConnections; }
+			get { return Clients.ToListOfPeer(); }
 		}
 
 		private readonly IList<ConnectionResponse> UnhandledServerConnections;
@@ -147,8 +147,9 @@ namespace GladNet.Server
 		/// <param name="endPoint"></param>
 		/// <param name="applicationName"></param>
 		/// <param name="hailMessage"></param>
+		/// <param name="callbackObject">Object that will be returned in the response. (Not sent to the server)</param>
 		/// <returns>Indicates whether a connection has been successfully attempted (doesn't indicate if it was established).</returns>
-		public bool ConnectToServer(IPEndPoint endPoint, string hailMessage)
+		public bool ConnectToServer(IPEndPoint endPoint, string hailMessage, object callbackObject = null)
 		{
 			if (endPoint == null)
 				return false;
@@ -159,12 +160,12 @@ namespace GladNet.Server
 				msg.Write(ServerTypeUniqueByte);
 
 #if DEBUGBUILD
-				AsyncConsoleLogger.Instance.LogDebug("Attempting to connect to another server.");
+				this.ClassLogger.LogDebug("Attempting to connect to another server.");
 #endif
 				NetConnection possibleConnection = lidgrenServerObj.Connect(endPoint, msg);
 
 				ConnectionResponse response = new ConnectionResponse(endPoint, possibleConnection.RemoteUniqueIdentifier,
-					possibleConnection, hailMessage);
+					possibleConnection, hailMessage, callbackObject);
 
 				this.UnhandledServerConnections.Add(response);
 				return true;
@@ -243,17 +244,21 @@ namespace GladNet.Server
 							while (true)
 							{
 								message = reader.ReadLine();
+
+								if (message != null)
+								{
 #if DEBUGBUILD
-								ClassLogger.LogDebug("Recieved message via Launcher pipe: " + message);
+									ClassLogger.LogDebug("Recieved message via Launcher pipe: " + message);
 #endif
 
 
-								if (message.Contains("[SHUTDOWN]"))
-									if (message == "[SHUTDOWN] " + Process.GetCurrentProcess().Id.ToString())
-									{
-										isReady = false;
-										break;
-									}
+									if (message.Contains("[SHUTDOWN]"))
+										if (message == "[SHUTDOWN] " + Process.GetCurrentProcess().Id.ToString())
+										{
+											isReady = false;
+											break;
+										}
+								}
 							}
 						}
 					}
@@ -270,11 +275,17 @@ namespace GladNet.Server
 		/// </summary>
 		internal void InternalOnShutdown()
 		{
-			isReady = false;
+			
 #if DEBUGBUILD
 			ClassLogger.LogDebug("Server shutdown requested.");
 #endif
 			OnShutdown();
+
+			//Do not stop polling the server until the application is about to stop.
+			//In case it is desired to send a final message to clients and subservers we flush the network queue
+			//So these messages can hopefully be sent before shutdown.
+			this.lidgrenServerObj.FlushSendQueue();
+			isReady = false;
 		}
 
 		protected abstract void OnStartup();
@@ -403,7 +414,7 @@ namespace GladNet.Server
 						return;
 #if DEBUGBUILD
 					if(UnhandledServerConnections.Remove(cr))
-						ClassLogger.LogDebug("Successfully removed a CR from a failed outgoing connection.");
+						ClassLogger.LogDebug("Successfully removed a CR from a outgoing connection.");
 					else
 						ClassLogger.LogDebug("Failed to remove a CR from a failed outgoing connection.");
 #else
@@ -434,7 +445,7 @@ namespace GladNet.Server
 			switch(status)
 			{
 				case NetConnectionStatus.Disconnected:
-					peerPair.HighlevelPeer.InternalOnDisconnection();
+					peerPair.HighlevelPeer.Disconnect();
 					break;
 			}
 		}

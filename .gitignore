@@ -156,3 +156,9 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+
+#Ignore ILMerge stuff
+ILMerge.exe
+ILMergedLauncherLoader/
+ILMerged*/
+ilmerge*/
