@@ -72,6 +72,28 @@ namespace GladNet.Server.Connections.Readers
 		/// <param name="channel"></param>
 		/// <exception cref="LoggableException">Throws a loggable exception generally when packet serialization fails. You should catch this.</exception>
 		/// <returns></returns>
+		public Packet.SendResult SendResponse(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, bool encrypt = false)
+		{
+			try
+			{
+				return SendResponse(packet, packetCode, deliveryMethod, channel, encrypt ? EncryptionBase.DefaultByte : EncryptionBase.NoEncryptionByte);
+			}
+			catch (LoggableException e)
+			{
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="packet"></param>
+		/// <param name="packetCode"></param>
+		/// <param name="deliveryMethod"></param>
+		/// <param name="encrypt"></param>
+		/// <param name="channel"></param>
+		/// <exception cref="LoggableException">Throws a loggable exception generally when packet serialization fails. You should catch this.</exception>
+		/// <returns></returns>
 		public Packet.SendResult SendResponse(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, byte encrypt = EncryptionBase.NoEncryptionByte)
 		{
 			try

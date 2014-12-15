@@ -25,7 +25,7 @@ namespace GladNet.Server.Connections
 		public ServerPeer(IConnectionDetails details, Logger logger) 
 			: base(details)
 		{
-			
+			this.ClassLogger = logger;
 		}
 
 		public override void PackageRecieve(RequestPackage package)
@@ -40,6 +40,23 @@ namespace GladNet.Server.Connections
 		public bool EstablishEncryption(Action OnSuccess)
 		{
 			return this.Register(new DiffieHellmanAESEncryptor(), OnSuccess);
+		}
+
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, bool encrypt = false)
+		{
+			return this.SendRequest(packet, packetCode, deliveryMethod, channel, encrypt ? EncryptionBase.DefaultByte : EncryptionBase.NoEncryptionByte);
+		}
+
+		public Packet.SendResult SendRequest(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel, byte encrypt)
+		{
+			try
+			{
+				return this.SendMessage(Packet.OperationType.Request, packet, packetCode, deliveryMethod, channel, encrypt);
+			}
+			catch (LoggableException e)
+			{
+				throw;
+			}
 		}
 
 		//This is not needed by the client

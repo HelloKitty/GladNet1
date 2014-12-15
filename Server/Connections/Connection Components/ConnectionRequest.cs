@@ -32,5 +32,12 @@ namespace GladNet.Server.Connections
 			this.InternalNetConnection = connection;
 			ConnectionTypeIndicator = connectionType;
 		}
+
+		public override string ToString()
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.AppendFormat("{0}:{1} ID: {2}", this.RemoteConnectionEndpoint.Address, this.RemoteConnectionEndpoint.Port, this.UniqueConnectionId);
+			return builder.ToString();	
+		}
 	}
 }
