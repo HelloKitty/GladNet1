@@ -164,8 +164,7 @@ namespace GladNet.Server
 #endif
 				NetConnection possibleConnection = lidgrenServerObj.Connect(endPoint, msg);
 
-				ConnectionResponse response = new ConnectionResponse(endPoint, possibleConnection.RemoteUniqueIdentifier,
-					possibleConnection, hailMessage, callbackObject);
+				ConnectionResponse response = new ConnectionResponse(endPoint, possibleConnection, hailMessage, callbackObject);
 
 				this.UnhandledServerConnections.Add(response);
 				return true;
@@ -466,7 +465,7 @@ namespace GladNet.Server
 				return Clients.Register(new ConnectionPair<NetConnection, ClientPeer>(netConnection, cp), netConnection.RemoteUniqueIdentifier);
 			}
 			else
-				ClassLogger.LogError("cp is null");
+				ClassLogger.LogDebug("ClientPeer generated for {0}:{1} ID: {2} is null.", netConnection.RemoteEndPoint.Address, netConnection.RemoteEndPoint.Port, netConnection.RemoteUniqueIdentifier);
 
 			return false;
 		}

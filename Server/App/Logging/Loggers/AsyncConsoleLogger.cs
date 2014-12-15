@@ -41,26 +41,54 @@ namespace GladNet.Server
 
 		public void SetState(Logger.LogType newState)
 		{
-			this.LoggerState = newState;
+			lock (_Instance)
+			{
+				this.LoggerState = newState;
+			}
 		}
 
 		protected override void Log(string text, Logger.LogType state)
 		{
-			BlockingQueue.Add(state.ToString() + ": " + text);
+			StringBuilder builder = new StringBuilder(state.ToString());
+			builder.Append(": ");
+			builder.Append(text);
+
+			BlockingQueue.Add(builder.ToString());
 		}
 
 		protected override void Log(string text, Logger.LogType state, params object[] data)
 		{
 			StringBuilder builder = new StringBuilder();
 
-			builder.AppendFormat(state.ToString() + ": " + text, data);
+			try
+			{
+				builder.AppendFormat(state.ToString() + ": " + text, data);
+			}
+			catch(Exception e)
+			{
+				this.LogError("Failed to log; check parameter list for logging. See exception for stack trace.");
+				throw;
+			}
 
 			BlockingQueue.Add(builder.ToString());
 		}
 
 		protected override void Log(string text, Logger.LogType state, params string[] data)
 		{
-			this.Log(state.ToString() + ": " + text, state, data);
+			StringBuilder builder = new StringBuilder();
+			StringBuilder subBuilder = new StringBuilder(state.ToString());
+			subBuilder.Append(": ");
+			subBuilder.Append(text);
+
+			try
+			{
+				builder.AppendFormat(subBuilder.ToString(), data);
+			}
+			catch(Exception e)
+			{
+				this.LogError("Failed to log; check parameter list for logging. See exception for stack trace.");
+				throw;
+			}
 		}
 
 		protected override void Log(object obj, Logger.LogType state)
@@ -68,7 +96,11 @@ namespace GladNet.Server
 			if (obj == null)
 				return;
 
-			BlockingQueue.Add(state.ToString() + ": " + obj.ToString());
+			StringBuilder builder = new StringBuilder(state.ToString());
+			builder.Append(": ");
+			builder.Append(obj != null ? obj.ToString() : "[NULL]");
+
+			this.BlockingQueue.Add(builder.ToString());
 		}
 	}
 }

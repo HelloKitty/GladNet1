@@ -20,7 +20,11 @@ namespace GladNet.Server.Connections
 	public class ConnectionResponse : IConnectionDetails
 	{
 		public IPEndPoint RemoteConnectionEndpoint { get; private set; }
-		public long UniqueConnectionId { get; private set; }
+		public long UniqueConnectionId
+		{
+			get { return InternalNetConnection != null ? InternalNetConnection.RemoteUniqueIdentifier : 0; }
+		}
+
 		public NetConnection InternalNetConnection { get; private set; }
 
 		public readonly string HailUsed;
@@ -29,13 +33,19 @@ namespace GladNet.Server.Connections
 
 		internal bool Result { get; set; }
 
-		public ConnectionResponse(IPEndPoint point, long uid, NetConnection connection, string hail, object callback)//, byte connectionType)
+		public ConnectionResponse(IPEndPoint point, NetConnection connection, string hail, object callback)//, byte connectionType)
 		{
 			this.RemoteConnectionEndpoint = point;
-			this.UniqueConnectionId = uid;
 			this.InternalNetConnection = connection;
 			HailUsed = hail;
 			CallbackObj = callback;
+		}
+
+		public override string ToString()
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.AppendFormat("{0}:{1} ID: {2}", this.RemoteConnectionEndpoint.Address, this.RemoteConnectionEndpoint.Port, this.UniqueConnectionId);
+			return builder.ToString();
 		}
 	}
 }
