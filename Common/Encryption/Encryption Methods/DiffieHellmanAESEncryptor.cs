@@ -30,13 +30,13 @@ namespace GladNet.Common
 
 		public override bool SetKeyPublicKey(byte[] pKey)
 		{
-			throw new LoggableException("Cannot set public key of DiffieHellman mentalis implementation with only one byte array.", null, Logger.LogType.Error);
+			throw new LoggableException("Cannot set public key of DiffieHellman mentalis implementation with only one byte array.", null, LogType.Error);
 		}
 
 		public override byte[] Encrypt(byte[] toEncrypt, out byte[] addtionalBytes)
 		{
 			if (toEncrypt == null)
-				throw new LoggableException("Tried to encrypt a null array.", new ArgumentException("In DiffieHellmanAESEncryptor: Encrypt. Parameter was null", "toEncrypt"), Logger.LogType.Error);
+				throw new LoggableException("Tried to encrypt a null array.", new ArgumentException("In DiffieHellmanAESEncryptor: Encrypt. Parameter was null", "toEncrypt"), LogType.Error);
 
 			try
 			{
@@ -64,17 +64,17 @@ namespace GladNet.Common
 			}
 			catch(CryptographicException e)
 			{
-				throw new LoggableException("Failed to encrypt package in DiffieHellmanAESEncryptor.", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to encrypt package in DiffieHellmanAESEncryptor.", e, LogType.Error);
 			}
 		}
 
 		public override byte[] Decrypt(byte[] toDecrypt, byte[] additionalBytes)
 		{
 			if (toDecrypt == null || toDecrypt.Length == 0)
-				throw new LoggableException("Tried to decrypt a null array.", new ArgumentException("In DiffieHellmanAESEncryptor: Decrypt. Parameter was null", "toDecrypt"), Logger.LogType.Error);
+				throw new LoggableException("Tried to decrypt a null array.", new ArgumentException("In DiffieHellmanAESEncryptor: Decrypt. Parameter was null", "toDecrypt"), LogType.Error);
 
 			if (additionalBytes == null || additionalBytes.Length == 0)
-				throw new LoggableException("IV For AES decryption was null (additionalBytes)", new ArgumentException("In DiffieHellmanAESEncryptor parameter for Decrypt was null", "additionalBytes"), Logger.LogType.Error);
+				throw new LoggableException("IV For AES decryption was null (additionalBytes)", new ArgumentException("In DiffieHellmanAESEncryptor parameter for Decrypt was null", "additionalBytes"), LogType.Error);
 
 			try
 			{
@@ -100,7 +100,7 @@ namespace GladNet.Common
 			}
 			catch (CryptographicException e)
 			{
-				throw new LoggableException("Failed to decrypt package in DiffieHellmanAESEncryptor.", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to decrypt package in DiffieHellmanAESEncryptor.", e, LogType.Error);
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace GladNet.Common
 
 				if (container == null)
 				{
-					throw new LoggableException("Failed to set DiffieHellman params.", null, Logger.LogType.Error);
+					throw new LoggableException("Failed to set DiffieHellman params.", null, LogType.Error);
 				}
 
 				//If we're the second peer we want to import the parameters.
@@ -137,7 +137,7 @@ namespace GladNet.Common
 				}
 
 				if (container.PublicKey == null)
-					throw new LoggableException("Recieved a null public key for mentalis DiffieHellman exchange.", null, Logger.LogType.Error);
+					throw new LoggableException("Recieved a null public key for mentalis DiffieHellman exchange.", null, LogType.Error);
 
 				secretKey = internalEncryptionObj.DecryptKeyExchange(container.PublicKey);
 

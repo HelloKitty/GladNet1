@@ -25,13 +25,21 @@ namespace GladNet.Common
 		}
 	}
 
+	[PacketAttribute(4)]
+	[ProtoContract]
 	public class MalformedPacket : Packet
 	{
 		public bool isMalformed { get; private set; }
 
 		public MalformedPacket()
+			: base()
 		{
 			isMalformed = true;
+		}
+
+		public override bool IsValid(MessageInfo info)
+		{
+			return false;
 		}
 	}
 }

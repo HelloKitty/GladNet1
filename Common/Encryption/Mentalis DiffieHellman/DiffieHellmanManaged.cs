@@ -259,12 +259,12 @@ namespace Org.Mentalis.Security.Cryptography {
 
 		public override void FromXmlString(string xmlString)
 		{
-			throw new LoggableException("Do not touch the XML methods for the Mentalis diffiehellman implementation.", null, Logger.LogType.Error);
+			throw new LoggableException("Do not touch the XML methods for the Mentalis diffiehellman implementation.", null, LogType.Error);
 		}
 
 		public override string ToXmlString(bool includePrivateParameters)
 		{
-			throw new LoggableException("Do not touch the XML methods for the Mentalis diffiehellman implementation.", null, Logger.LogType.Error);
+			throw new LoggableException("Do not touch the XML methods for the Mentalis diffiehellman implementation.", null, LogType.Error);
 		}
 	}
 }

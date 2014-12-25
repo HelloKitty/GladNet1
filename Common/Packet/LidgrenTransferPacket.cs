@@ -107,7 +107,7 @@ namespace GladNet.Common
 				}
 				catch (CryptographicException e)
 				{
-					throw new LoggableException("Failed to encrypt LidgrenPacket: " + this.ToString(), e, Logger.LogType.Error);
+					throw new LoggableException("Failed to encrypt LidgrenPacket: " + this.ToString(), e, LogType.Error);
 				}
 			}
 		}
@@ -127,7 +127,7 @@ namespace GladNet.Common
 				}
 				catch(CryptographicException e)
 				{
-					throw new LoggableException("Failed to decrypt LidgrenPacket: " + this.ToString(), e, Logger.LogType.Error);
+					throw new LoggableException("Failed to decrypt LidgrenPacket: " + this.ToString(), e, LogType.Error);
 				}
 			}
 			else

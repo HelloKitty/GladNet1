@@ -20,7 +20,7 @@ namespace GladNet.Common
 	/// </summary>
 	public class LoggableException : Exception
 	{
-		public Logger.LogType LoggableType { get; private set; }
+		public LogType LoggableType { get; private set; }
 
 		public bool hasInner
 		{
@@ -28,7 +28,7 @@ namespace GladNet.Common
 		}
 		
 
-		public LoggableException(string message, Exception inner, Logger.LogType type)
+		public LoggableException(string message, Exception inner, LogType type)
 			: base(message, inner)
 		{
 			this.LoggableType = type;

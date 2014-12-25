@@ -18,24 +18,24 @@ namespace GladNet.Server.Connections
 {
 	public abstract class ServerPeer : Peer, ILoggable
 	{
-		public Logger ClassLogger { get; protected set; }
+		public ILogger ClassLogger { get; protected set; }
 
 		public bool isAuthenticated { get; protected set; }
 
-		public ServerPeer(IConnectionDetails details, Logger logger) 
+		public ServerPeer(IConnectionDetails details, ILogger logger) 
 			: base(details)
 		{
 			this.ClassLogger = logger;
 		}
 
-		public override void PackageRecieve(RequestPackage package)
+		public override void PackageRecieve(RequestPackage package, MessageInfo info)
 		{
-			throw new LoggableException("ServerPeer base recieved a RequestPackage but ServerPeer cannot handle this message type.", null, Logger.LogType.Error);
+			throw new LoggableException("ServerPeer base recieved a RequestPackage but ServerPeer cannot handle this message type.", null, LogType.Error);
 		}
 
-		public override abstract void PackageRecieve(EventPackage package);
+		public override abstract void PackageRecieve(EventPackage package, MessageInfo info);
 
-		public override abstract void PackageRecieve(ResponsePackage package);
+		public override abstract void PackageRecieve(ResponsePackage package, MessageInfo info);
 
 		public bool EstablishEncryption(Action OnSuccess)
 		{

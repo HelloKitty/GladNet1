@@ -20,7 +20,7 @@ namespace Common.Exceptions
 		public readonly Type Serializer;
 
 		public SerializationException(Type involvedType, Type serializerType, Exception innerException, string message) 
-			: base(message, innerException, Logger.LogType.Error)
+			: base(message, innerException, LogType.Error)
 		{
 			this.TypeInvolved = involvedType;
 			this.Serializer = serializerType;

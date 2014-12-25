@@ -18,8 +18,8 @@ namespace GladNet.Client
 	{
 		void RegisterProtobufPackets(Func<Type, bool> registerMethod);
 
-		void RecievePackage(EventPackage eventPackage);
-		void RecievePackage(ResponsePackage responsePackage);
+		void RecievePackage(EventPackage eventPackage, MessageInfo info);
+		void RecievePackage(ResponsePackage responsePackage, MessageInfo info);
 
 		void OnStatusChange(StatusChange status);
 	}

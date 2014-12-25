@@ -31,7 +31,7 @@ namespace GladNet.Client
 		private NetClient internalLidgrenClient;
 		#endregion
 
-		public Logger ClassLogger { get; private set; }
+		public ILogger ClassLogger { get; private set; }
 
 		private Thread networkThread;
 
@@ -45,10 +45,10 @@ namespace GladNet.Client
 		private double timeNowByPollComparer = 0;
 
 #if UNITYDEBUG || UNITYRELEASE
-		public GladNetPeer(IListener listener, Logger logger = null)
+		public GladNetPeer(IListener listener, ILogger logger = null)
 					: base(null)
 		{
-			ClassLogger = logger == null ? new UnityLogger(Logger.LogType.Debug) : logger;
+			ClassLogger = (logger == null ? new UnityLogger(LogType.Debug) : logger);
 
 			NetworkMessageHandler = new ClientPacketHandler(ClassLogger);
 
@@ -66,16 +66,15 @@ namespace GladNet.Client
 			_isConnected = false;
 		}
 #else
-		public GladNetPeer(IListener listener, Logger logger) 
+		public GladNetPeer(IListener listener, ILogger logger) 
 			: base(null)
 		{
+			ClassLogger = logger;
 			NetworkMessageHandler = new ClientPacketHandler(logger);
 
 			RecieverListener = listener;
 			//Call the interface method to register the packets.
 			RegisterProtobufPackets(Packet.Register);
-
-			ClassLogger = logger;
 
 			//This registers the default serializer
 			NetworkMessageHandler.Register<GladNetProtobufNetSerializer>();
@@ -374,7 +373,7 @@ namespace GladNet.Client
 					catch(LoggableException e)
 					{
 						//Checking this because it can cause some nasty GC to make these string adds.
-						if (ClassLogger.isStateEnabled(Logger.LogType.Debug))
+						if (ClassLogger.isStateEnabled(LogType.Debug))
 							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
@@ -389,7 +388,7 @@ namespace GladNet.Client
 					catch(LoggableException e)
 					{
 						//Checking this because it can cause some nasty GC to make these string adds.
-						if (ClassLogger.isStateEnabled(Logger.LogType.Debug))
+						if (ClassLogger.isStateEnabled(LogType.Debug))
 							ClassLogger.LogDebug(e.Message + " Inner: " + e.InnerException != null ? e.InnerException.Message : "");
 					}
 					break;
@@ -480,6 +479,7 @@ namespace GladNet.Client
 			catch(LoggableException e)
 			{
 				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
+				throw;
 			}
 		}
 
@@ -489,26 +489,26 @@ namespace GladNet.Client
 		}
 
 		#region Peer Implementation
-		public override void PackageRecieve(RequestPackage package)
+		public override void PackageRecieve(RequestPackage package, MessageInfo info)
 		{
-			throw new LoggableException("Recieved a request package but a client cannot handle such a package.", null, Logger.LogType.Error);
+			throw new LoggableException("Recieved a request package but a client cannot handle such a package.", null, LogType.Error);
 		}
 
-		public override void PackageRecieve(ResponsePackage package)
+		public override void PackageRecieve(ResponsePackage package, MessageInfo info)
 		{
 			lock(networkIncomingEnqueueSyncObj)
 			{
 				if (RecieverListener != null)
-					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
+					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package, info); });
 			}
 		}
 
-		public override void PackageRecieve(EventPackage package)
+		public override void PackageRecieve(EventPackage package, MessageInfo info)
 		{
 			lock (networkIncomingEnqueueSyncObj)
 			{
 				if(RecieverListener != null)
-					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package); });
+					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package, info); });
 			}
 		}
 

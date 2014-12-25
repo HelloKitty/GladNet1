@@ -11,7 +11,7 @@ namespace GladNet.Common
 	{
 		protected IDictionary<byte, Func<EncryptionBase>> EncryptionFactory;
 
-		public PacketHandler(Logger logger)
+		public PacketHandler(ILogger logger)
 			: base(logger)
 		{
 			EncryptionFactory = new Dictionary<byte, Func<EncryptionBase>>();
@@ -27,11 +27,11 @@ namespace GladNet.Common
 			return true;
 		}
 
-		public virtual bool DispatchMessage(Peer toPassTo, NetBuffer msg, bool isInternal)
+		public virtual bool DispatchMessage(Peer toPassTo, NetIncomingMessage msg, bool isInternal)
 		{
 			
 			if (msg == null)
-				throw new LoggableException("When dispatched NetBuffer was found to be null.", null, Logger.LogType.Error);
+				throw new LoggableException("When dispatched NetBuffer was found to be null.", null, LogType.Error);
 
 			LidgrenTransferPacket packet = this.BuildTransferPacket(msg);
 
@@ -63,11 +63,11 @@ namespace GladNet.Common
 			if (!isInternal)
 				if (packet.isEncrypted)
 				{
-					return DispatchEncryptedMessage(toPassTo, packet);
+					return DispatchEncryptedMessage(toPassTo, packet, msg.DeliveryMethod);
 				}
 				else
 				{
-					return Dispatch(toPassTo, packet);
+					return Dispatch(toPassTo, packet, msg.DeliveryMethod);
 				}
 			else
 				return HandleInternalMessage(toPassTo, packet);
@@ -95,7 +95,7 @@ namespace GladNet.Common
 				case Packet.OperationType.Response:
 					return this.ProcessInternalResponse((InternalPacketCode)packet.PacketCode, deserializedPacketBase, toPassTo);
 				case Packet.OperationType.Event:
-					throw new LoggableException("GladNet currently does not support internal events.", null, Logger.LogType.Error);
+					throw new LoggableException("GladNet currently does not support internal events.", null, LogType.Error);
 				default:
 					return false;
 			}
@@ -161,22 +161,20 @@ namespace GladNet.Common
 				return false;
 			}
 
+			//TODO: Verify that this is working. Callback at one point was not working.
 			//This will set the server's init info. In the case of the default, for example, it will set the Diffiehelmman public key.
 			//With this the server and client have established a shared secret and can now pass messages, with the IV, to eachother securely.
 			//In the case of a custom method it is User defined and should be referenced.
-			if (peer.EncryptionRegister[eq.EncryptionByteType].SetNetworkInitRequiredData(eq.EncryptionInitInfo))
+			bool result = peer.EncryptionRegister[eq.EncryptionByteType].SetNetworkInitRequiredData(eq.EncryptionInitInfo);
+
+			Action callback = peer.EncryptionRegister[eq.EncryptionByteType].OnEstablished;
+
+			if (callback != null)
 			{
-				Action callback = peer.EncryptionRegister[eq.EncryptionByteType].OnEstablished;
-
-				if (callback != null)
-				{
-					callback();
-				}
-
-				return true;
+				callback();
 			}
-			else
-				return false;
+
+			return result;
 		}
 
 		private bool EncryptionRegisterFromWire(Peer toPassTo, PacketBase packet)
@@ -215,7 +213,7 @@ namespace GladNet.Common
 			return false;
 		}
 
-		private bool DispatchEncryptedMessage(Peer toPassTo, LidgrenTransferPacket packet)
+		private bool DispatchEncryptedMessage(Peer toPassTo, LidgrenTransferPacket packet, NetDeliveryMethod method)
 		{
 			if (!toPassTo.EncryptionRegister.HasKey(packet.EncryptionMethodByte))
 			{
@@ -230,17 +228,17 @@ namespace GladNet.Common
 					case Packet.OperationType.Event:
 						EventPackage ep = this.GeneratePackage<EventPackage>(packet, toPassTo.EncryptionRegister[packet.EncryptionMethodByte]);
 						if (ep != null)
-							toPassTo.PackageRecieve(ep);
+							toPassTo.PackageRecieve(ep, new MessageInfo(packet, method));
 						return true;
 					case Packet.OperationType.Request:
 						RequestPackage rqp = this.GeneratePackage<RequestPackage>(packet, toPassTo.EncryptionRegister[packet.EncryptionMethodByte]);
 						if (rqp != null)
-							toPassTo.PackageRecieve(rqp);
+							toPassTo.PackageRecieve(rqp, new MessageInfo(packet, method));
 						return true;
 					case Packet.OperationType.Response:
 						ResponsePackage rp = this.GeneratePackage<ResponsePackage>(packet, toPassTo.EncryptionRegister[packet.EncryptionMethodByte]);
 						if (rp != null)
-							toPassTo.PackageRecieve(rp);
+							toPassTo.PackageRecieve(rp, new MessageInfo(packet, method));
 						return true;
 					default:
 						return false;
@@ -253,7 +251,7 @@ namespace GladNet.Common
 			}
 		}
 
-		private bool Dispatch(Peer toPassTo, IPackage packet)
+		private bool Dispatch(Peer toPassTo, IPackage packet, NetDeliveryMethod method)
 		{
 			try
 			{
@@ -263,7 +261,7 @@ namespace GladNet.Common
 					case Packet.OperationType.Event:
 						EventPackage ePackage = GeneratePackage<EventPackage>(packet);
 						if (ePackage != null)
-							toPassTo.PackageRecieve(ePackage);
+							toPassTo.PackageRecieve(ePackage, new MessageInfo(method));
 						return true;
 					case Packet.OperationType.Request:
 						//ClassLogger.LogDebug("Hit request");
@@ -271,13 +269,13 @@ namespace GladNet.Common
 						if (rqPackage != null)
 						{
 							//ClassLogger.LogDebug("About to call peer method");
-							toPassTo.PackageRecieve(rqPackage);
+							toPassTo.PackageRecieve(rqPackage, new MessageInfo(method));
 						}
 						return true;
 					case Packet.OperationType.Response:
 						ResponsePackage rPackage = GeneratePackage<ResponsePackage>(packet);
 						if (rPackage != null)
-							toPassTo.PackageRecieve(rPackage);
+							toPassTo.PackageRecieve(rPackage, new MessageInfo(method));
 						return true;
 
 					default:

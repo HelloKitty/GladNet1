@@ -16,9 +16,9 @@ namespace GladNet.Server
 		private readonly IConnectionCollection<ServerPeer, NetConnection> Servers;
 		private readonly IConnectionCollection<ClientPeer, NetConnection> Clients;
 
-		public Logger ClassLogger { get; private set; }
+		public ILogger ClassLogger { get; private set; }
 
-		public HighlevelMessageHandler(IConnectionCollection<ServerPeer, NetConnection> servers, IConnectionCollection<ClientPeer, NetConnection> clients, Logger logger)
+		public HighlevelMessageHandler(IConnectionCollection<ServerPeer, NetConnection> servers, IConnectionCollection<ClientPeer, NetConnection> clients, ILogger logger)
 		{
 			Servers = servers;
 			Clients = clients;

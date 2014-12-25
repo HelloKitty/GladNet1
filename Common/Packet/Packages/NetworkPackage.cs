@@ -13,9 +13,9 @@ using System.Text;
 
 namespace GladNet.Common
 {
+	//Not abstract for some Type constraint hackery elsewhere
 	public class NetworkPackage
 	{
-		public byte EncryptionMethodByte { get; internal set; }
 		public byte Code { get; protected set; }
 		public PacketBase PacketObject { get; protected set; }
 
@@ -23,6 +23,11 @@ namespace GladNet.Common
 		{
 			PacketObject = packet;
 			Code = code;
+		}
+
+		public virtual bool isValid()
+		{
+			return PacketObject != null;
 		}
 	}
 }
