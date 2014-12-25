@@ -24,6 +24,6 @@ namespace GladNet.Server.Logging
 
 	public interface ILoggable
 	{
-		Logger ClassLogger { get; }
+		ILogger ClassLogger { get; }
 	}
 }

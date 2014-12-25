@@ -42,7 +42,7 @@ namespace GladNet.Common
 			}
 			catch (SerializationException e)
 			{
-				throw new LoggableException("Failed to deserialize package.", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to deserialize package.", e, LogType.Error);
 			}
 		}
 
@@ -54,7 +54,7 @@ namespace GladNet.Common
 					return packet.Decrypt(decrypter);
 				else
 					throw new LoggableException("Failed to decrypt byte[] blob due to decryptor object being of byte: " + decrypter.EncryptionTypeByte.ToString() +
-				" and lidgren packet encryption byte being: " + packet.EncryptionMethodByte, null, Logger.LogType.Error);
+				" and lidgren packet encryption byte being: " + packet.EncryptionMethodByte, null, LogType.Error);
 			}
 			else
 				return false;
@@ -73,9 +73,6 @@ namespace GladNet.Common
 				this.DecryptIncomingPacket(package, decryptor);
 
 			NetworkPackageType dispatchPackage = GenerateFromPacket<NetworkPackageType>(package, serializer);
-
-			if (package != null)
-				dispatchPackage.EncryptionMethodByte = package.EncryptionMethodByte;
 
 			return dispatchPackage;
 		}

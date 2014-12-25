@@ -49,7 +49,7 @@ namespace GladNet.Server
 		/// <summary>
 		/// Forces the application's core to provide implementation for a logger class to log information to.
 		/// </summary>
-		public Logger ClassLogger { get; private set; }
+		public ILogger ClassLogger { get; private set; }
 
 		private bool isReady = false;
 
@@ -88,7 +88,7 @@ namespace GladNet.Server
 		protected PacketHandler NetworkMessageHandler;
 
 		//TODO: Refactor
-		public ServerCore(Logger loggerInstance, string appName, int port, string hailMessage) 
+		public ServerCore(ILogger loggerInstance, string appName, int port, string hailMessage) 
 			: base()
 		{
 			NetworkMessageHandler = new PacketHandler(loggerInstance);
@@ -195,6 +195,7 @@ namespace GladNet.Server
 				
 				Packet.Register(typeof(EmptyPacket), true);
 				Packet.Register(typeof(EncryptionRequest), true);
+				Packet.Register(typeof(MalformedPacket), true);
 
 				//Add in all the custom packets the server uses.
 				RegisterProtobufPackets(Packet.Register);

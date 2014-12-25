@@ -30,7 +30,7 @@ namespace GladNet.Common
 			}
 			catch(Exception e)
 			{
-				throw new LoggableException("Failed to serialize object with xml to byte[]", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to serialize object with xml to byte[]", e, LogType.Error);
 			}
 		}
 
@@ -48,7 +48,7 @@ namespace GladNet.Common
 			}
 			catch(Exception e)
 			{
-				throw new LoggableException("Failed to serialize object with xml to string", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to serialize object with xml to string", e, LogType.Error);
 			}
 		}
 
@@ -65,7 +65,7 @@ namespace GladNet.Common
 			}
 			catch(Exception e)
 			{
-				throw new LoggableException("Failed to deserialize object with xml from byte[]", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to deserialize object with xml from byte[]", e, LogType.Error);
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace GladNet.Common
 			}
 			catch(Exception e)
 			{
-				throw new LoggableException("Failed to deserialize object with xml from string", e, Logger.LogType.Error);
+				throw new LoggableException("Failed to deserialize object with xml from string", e, LogType.Error);
 			}
 		}
 	}

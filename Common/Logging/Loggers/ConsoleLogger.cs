@@ -45,7 +45,7 @@ namespace GladNet.Common.Logging.Loggers
 
 		}
 
-		protected override void Log(string text, Logger.LogType state)
+		protected override void Log(string text, LogType state)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ").Append(text);
@@ -53,7 +53,7 @@ namespace GladNet.Common.Logging.Loggers
 			Console.WriteLine(builder.ToString());
 		}
 
-		protected override void Log(string text, Logger.LogType state, params object[] data)
+		protected override void Log(string text, LogType state, params object[] data)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ").AppendFormat(text, data);
@@ -61,7 +61,7 @@ namespace GladNet.Common.Logging.Loggers
 			Console.WriteLine(builder.ToString());
 		}
 
-		protected override void Log(string text, Logger.LogType state, params string[] data)
+		protected override void Log(string text, LogType state, params string[] data)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ").AppendFormat(text, data);
@@ -69,7 +69,7 @@ namespace GladNet.Common.Logging.Loggers
 			Console.WriteLine(builder.ToString());
 		}
 
-		protected override void Log(object obj, Logger.LogType state)
+		protected override void Log(object obj, LogType state)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ").Append(obj == null ? "[NULL]" : obj.ToString());

@@ -26,5 +26,6 @@ namespace GladNet.Common
 	public interface IRegisterable<RegisterType>
 	{
 		bool Register(RegisterType obj);
+		bool UnRegister(RegisterType key);
 	}
 }

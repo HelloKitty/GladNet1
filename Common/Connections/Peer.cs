@@ -18,7 +18,7 @@ namespace GladNet.Common
 {
 	public abstract class Peer
 	{
-
+		//TODO: Find a way to make Unity handle internals.
 #if UNITYDEBUG || UNITYRELEASE
 		/// <summary>
 		/// Provides a Dictionary/like datastructure to hold encryption object instances.
@@ -77,9 +77,9 @@ namespace GladNet.Common
 			return p.InternalNetConnection;
 		}
 
-		public abstract void PackageRecieve(RequestPackage package);
-		public abstract void PackageRecieve(ResponsePackage package);
-		public abstract void PackageRecieve(EventPackage package);
+		public abstract void PackageRecieve(RequestPackage package, MessageInfo info);
+		public abstract void PackageRecieve(ResponsePackage package, MessageInfo info);
+		public abstract void PackageRecieve(EventPackage package, MessageInfo info);
 
 		public virtual void Disconnect()
 		{
@@ -119,7 +119,7 @@ namespace GladNet.Common
 			}
 			catch(Exception e)
 			{
-				throw new LoggableException("Exception occured in serialization of packet.", e, Logger.LogType.Error);
+				throw new LoggableException("Exception occured in serialization of packet.", e, LogType.Error);
 			}
 		}
 
@@ -151,7 +151,7 @@ namespace GladNet.Common
 			}
 			catch(Exception e)
 			{
-				throw new LoggableException("Exception occured in serialization of packet.", e, Logger.LogType.Error);
+				throw new LoggableException("Exception occured in serialization of packet.", e, LogType.Error);
 			}
 		}
 #endif
@@ -162,7 +162,7 @@ namespace GladNet.Common
 					packet.Encrypt(EncryptionRegister[encrypt]);
 				else
 					throw new LoggableException("Failed to encrypt package for Peer ID: "
-						+ this.UniqueConnectionId + " With encryption ByteType: " + encrypt, null, Logger.LogType.Error);
+						+ this.UniqueConnectionId + " With encryption ByteType: " + encrypt, null, LogType.Error);
 		}
 	}
 }

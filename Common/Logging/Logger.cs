@@ -13,17 +13,8 @@ using System.Text;
 
 namespace GladNet.Common
 {
-	public abstract class Logger
+	public abstract class Logger : ILogger
 	{
-		[Flags]
-		public enum LogType
-		{
-			Disabled = 0,
-			Error = 2,
-			Warn = 4 | Error,
-			Debug = 8 | Warn
-		}
-
 		/// <summary>
 		/// Indicates which state the logger is in.
 		/// </summary>

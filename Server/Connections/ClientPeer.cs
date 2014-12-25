@@ -23,16 +23,16 @@ namespace GladNet.Server.Connections.Readers
 
 		}
 
-		public override abstract void PackageRecieve(RequestPackage package);
+		public override abstract void PackageRecieve(RequestPackage package, MessageInfo info);
 
-		public override void PackageRecieve(ResponsePackage package)
+		public override void PackageRecieve(ResponsePackage package, MessageInfo info)
 		{
-			throw new LoggableException("ClientPeer recieved a ResponsePackage but Peer cannot handle this message type.", null, Logger.LogType.Error);
+			throw new LoggableException("ClientPeer recieved a ResponsePackage but Peer cannot handle this message type.", null, LogType.Error);
 		}
 
-		public override void PackageRecieve(EventPackage package)
+		public override void PackageRecieve(EventPackage package, MessageInfo info)
 		{
-			throw new LoggableException("ClientPeer recieved a EventPackage but Peer cannot handle this message type.", null, Logger.LogType.Error);
+			throw new LoggableException("ClientPeer recieved a EventPackage but Peer cannot handle this message type.", null, LogType.Error);
 		}
 
 		public Packet.SendResult SendEvent(PacketBase packet, byte packetCode, Packet.DeliveryMethod deliveryMethod, int channel = 0, bool encrypt = false)

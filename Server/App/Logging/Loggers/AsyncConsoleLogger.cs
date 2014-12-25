@@ -29,7 +29,7 @@ namespace GladNet.Server
 		public static AsyncConsoleLogger Instance { get { return _Instance.Value; } }
 
 		private AsyncConsoleLogger() 
-			: base(Logger.LogType.Debug)
+			: base(LogType.Debug)
 		{
 			BlockingQueue = new BlockingCollection<string>(); 
 			
@@ -39,7 +39,7 @@ namespace GladNet.Server
 			}, TaskCreationOptions.LongRunning);
 		}
 
-		public void SetState(Logger.LogType newState)
+		public void SetState(LogType newState)
 		{
 			lock (_Instance)
 			{
@@ -47,7 +47,7 @@ namespace GladNet.Server
 			}
 		}
 
-		protected override void Log(string text, Logger.LogType state)
+		protected override void Log(string text, LogType state)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ");
@@ -56,7 +56,7 @@ namespace GladNet.Server
 			BlockingQueue.Add(builder.ToString());
 		}
 
-		protected override void Log(string text, Logger.LogType state, params object[] data)
+		protected override void Log(string text, LogType state, params object[] data)
 		{
 			StringBuilder builder = new StringBuilder();
 
@@ -73,7 +73,7 @@ namespace GladNet.Server
 			BlockingQueue.Add(builder.ToString());
 		}
 
-		protected override void Log(string text, Logger.LogType state, params string[] data)
+		protected override void Log(string text, LogType state, params string[] data)
 		{
 			StringBuilder builder = new StringBuilder();
 			StringBuilder subBuilder = new StringBuilder(state.ToString());
@@ -89,9 +89,11 @@ namespace GladNet.Server
 				this.LogError("Failed to log; check parameter list for logging. See exception for stack trace.");
 				throw;
 			}
+
+			BlockingQueue.Add(builder.ToString());
 		}
 
-		protected override void Log(object obj, Logger.LogType state)
+		protected override void Log(object obj, LogType state)
 		{
 			if (obj == null)
 				return;

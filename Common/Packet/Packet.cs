@@ -43,6 +43,11 @@ namespace GladNet.Common
 		{
 			get { return this.PacketSerializer.SerializerUniqueKey; }
 		}
+
+		public virtual bool IsValid(MessageInfo info)
+		{
+			return true;
+		}
 	}
 
 	[ProtoContract]
@@ -117,7 +122,7 @@ namespace GladNet.Common
 					return DeliveryMethod.UnreliableDiscardStale;
 
 				default:
-					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, Logger.LogType.Error);
+					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, LogType.Error);
 			}
 		}
 #if UNITYDEBUG || UNITYRELEASE
@@ -143,7 +148,7 @@ namespace GladNet.Common
 				case DeliveryMethod.UnreliableDiscardStale:
 					return NetDeliveryMethod.UnreliableSequenced;
 				default:
-					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, Logger.LogType.Error);
+					throw new LoggableException("Unsupported DeliverType: " + method.ToString() + " attempted for networked message.", null, LogType.Error);
 			}
 		}
 
@@ -173,15 +178,15 @@ namespace GladNet.Common
 
 			if (attr == null)
 				throw new LoggableException("Found derived type: " + t.Name + " of Packet that is not attributed by: " + typeof(PacketAttribute).Name + " all Protobut-net serializable " +
-					"packets must be targeted by this attribute for key purposes.", null, Logger.LogType.Error);
+					"packets must be targeted by this attribute for key purposes.", null, LogType.Error);
 
 			if (attr.UniquePacketKey <= Packet.PacketModelNumberOffset && !isInternal)
 				throw new LoggableException("Found derived type: " + t.Name + " of Packet that has a packet unique key value of " + attr.UniquePacketKey + "." +
-					" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.", null, Logger.LogType.Error);
+					" It is required that this key be greater than " + Packet.PacketModelNumberOffset + " as anything lower is reserved internally.", null, LogType.Error);
 
 			if (ReferencedProtobufSubtypes.Contains(attr.UniquePacketKey))
 				throw new LoggableException("Duplicate key " + attr.UniquePacketKey + " for Packet found on Type: " + t.Name + ". Key values must be distinct for a given system.",
-					null, Logger.LogType.Error);
+					null, LogType.Error);
 			else
 				ReferencedProtobufSubtypes.Add(attr.UniquePacketKey);
 
@@ -195,7 +200,7 @@ namespace GladNet.Common
 			catch (ProtoException e)
 			{
 				throw new LoggableException("Failed to register PacketType: " + t.FullName + " ID: " + attr.UniquePacketKey + "." +
-					" You may be trying to register it with an invalid ID or multiple times.", e, Logger.LogType.Error);
+					" You may be trying to register it with an invalid ID or multiple times.", e, LogType.Error);
 			}
 			return true;
 		}

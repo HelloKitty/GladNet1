@@ -8,7 +8,7 @@ namespace GladNet.Client
 {
 	public class ClientPacketHandler : PacketHandler
 	{
-		public ClientPacketHandler(Logger logger)
+		public ClientPacketHandler(ILogger logger)
 			: base(logger)
 		{
 

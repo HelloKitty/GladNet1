@@ -18,56 +18,56 @@ namespace GladNet.Client
 #if UNITYDEBUG || UNITYRELEASE
 	public class UnityLogger : Logger
 	{
-		public UnityLogger(LogType state)
+		public UnityLogger(GladNet.Common.LogType state)
 			:base(state)
 		{
 
 		}
 
-		protected override void Log(string text, Logger.LogType state)
+		protected override void Log(string text, GladNet.Common.LogType state)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ").Append(text);
 
 			switch(state)
 			{
-				case LogType.Debug:
+				case GladNet.Common.LogType.Debug:
 					Debug.Log(builder.ToString());
 					break;
-				case LogType.Warn:
+				case GladNet.Common.LogType.Warn:
 					Debug.LogWarning(builder.ToString());
 					break;
-				case LogType.Error:
+				case GladNet.Common.LogType.Error:
 					Debug.LogError(builder.ToString());
 					break;
 			}
 		}
 
-		protected override void Log(string text, Logger.LogType state, params object[] data)
+		protected override void Log(string text, GladNet.Common.LogType state, params object[] data)
 		{
 			StringBuilder builder = new StringBuilder(state.ToString());
 			builder.Append(": ").AppendFormat(text, data);
 
 			switch(state)
 			{
-				case LogType.Debug:
+				case GladNet.Common.LogType.Debug:
 					Debug.Log(builder.ToString());
 					break;
-				case LogType.Warn:
+				case GladNet.Common.LogType.Warn:
 					Debug.LogWarning(builder.ToString());
 					break;
-				case LogType.Error:
+				case GladNet.Common.LogType.Error:
 					Debug.LogError(builder.ToString());
 					break;
 			}
 		}
 
-		protected override void Log(string text, Logger.LogType state, params string[] data)
+		protected override void Log(string text, GladNet.Common.LogType state, params string[] data)
 		{
 			this.Log(text, state, (object[])data);
 		}
 
-		protected override void Log(object obj, Logger.LogType state)
+		protected override void Log(object obj, GladNet.Common.LogType state)
 		{
 			this.Log((string)(obj == null ? "[NULL]" : obj.ToString()), state);
 		}

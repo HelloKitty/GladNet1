@@ -10,13 +10,13 @@ namespace GladNet.Common
 {
 	public class PacketParser : ILoggable
 	{
-		public Logger ClassLogger { get; private set; }
+		public ILogger ClassLogger { get; private set; }
 
 		protected readonly IRegisterable<SerializerBase, byte> SerializerRegister;
 
 		protected readonly IPacketConverter Converter;
 
-		public PacketParser(Logger logger)
+		public PacketParser(ILogger logger)
 		{
 			ClassLogger = logger;
 
@@ -24,7 +24,7 @@ namespace GladNet.Common
 			Converter = new PacketConverter();
 		}
 
-		public PacketParser(Logger logger, IRegisterable<SerializerBase, byte> serializerRegister, IPacketConverter converter)
+		public PacketParser(ILogger logger, IRegisterable<SerializerBase, byte> serializerRegister, IPacketConverter converter)
 		{
 			ClassLogger = logger;
 			this.SerializerRegister = serializerRegister;
@@ -68,7 +68,7 @@ namespace GladNet.Common
 			where PackageType : NetworkPackage, new()
 		{
 			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
-				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
+				throw new LoggableException("Packet serializer not found with get.", null, LogType.Error);
 
 			return Converter.Convert<PackageType>(packet, SerializerRegister[packet.SerializerKey], decrypter);
 		}
@@ -78,7 +78,7 @@ namespace GladNet.Common
 			where PackageType : NetworkPackage, new()
 		{
 			if (SerializerRegister.GetValue(packet.SerializerKey) == null)
-				throw new LoggableException("Packet serializer not found with get.", null, Logger.LogType.Error);
+				throw new LoggableException("Packet serializer not found with get.", null, LogType.Error);
 
 			return Converter.Convert<PackageType>(packet, SerializerRegister[packet.SerializerKey]);
 		}
@@ -87,7 +87,7 @@ namespace GladNet.Common
 		{
 			if (SerializerRegister.HasKey(Serializer<T>.Instance.SerializerUniqueKey))
 				throw new LoggableException("Failed to register Serializer of Type: " + Serializer<T>.Instance.GetType().FullName + " due to a already inuse serializer key.",
-					null, Logger.LogType.Error);
+					null, LogType.Error);
 
 			return this.SerializerRegister.Register(Serializer<T>.Instance, Serializer<T>.Instance.SerializerUniqueKey);
 		}

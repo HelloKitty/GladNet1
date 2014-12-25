@@ -147,6 +147,7 @@ namespace Application__GUI_
 					ServerProcess proc;
 					ServerProcesses.TryRemove(sProcess.UniqueProcessID, out proc);
 					this.UpdateProcessList();
+					sProcess.Dispose();
 			};
 
 			this.ServerProcesses.TryAdd(sProcess.UniqueProcessID, sProcess);
