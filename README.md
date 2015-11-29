@@ -1,4 +1,1 @@
-GladNet
-=======
-
-A Lidgren gen3 based Networking Library based around Protobuf-net built for Unity standalone and Webplayer builds.
+GladNet is **deprecated** and **un**supported now. Refer to GladNet**2** for future networking needs: https://github.com/HelloKitty/GladNet2.0
