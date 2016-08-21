@@ -170,9 +170,9 @@ namespace GladNet.Common
 
 		public static bool Register(Type t, bool isInternal)
 		{
-			//Just return if the packet type is already known.
+			//Just return true if the packet type is already known. Pretending that we registered it again
 			if (KnownPacketTypes.Contains(t))
-				return false;
+				return true;
 
 			PacketAttribute attr = t.GetCustomAttributes(false).FirstOrDefault(x => x.GetType() == typeof(PacketAttribute)) as PacketAttribute;
 
@@ -208,7 +208,7 @@ namespace GladNet.Common
 		public static void SetupProtoRuntimePacketInheritance()
 		{
 			//Avoid adding the type twice.
-			if (RuntimeTypeModel.Default[typeof(PacketBase)].GetSubtypes().Select(x => x.DerivedType.Name.Contains("Packet")).Count() == 0)
+			if (RuntimeTypeModel.Default[typeof(PacketBase)].GetSubtypes().Where(x => x.DerivedType.Type == typeof(Packet)).Count() == 0)
 				RuntimeTypeModel.Default.Add(typeof(PacketBase), true).AddSubType(1, typeof(Packet));
 		}
 	}

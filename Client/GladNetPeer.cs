@@ -1,4 +1,4 @@
-﻿#region copyright
+﻿﻿#region copyright
 /// GladNet Copyright (C) 2014 Andrew Blakely 
 /// andrew.blakely@ymail.com
 /// GitHub: HeIIoKitty
@@ -41,13 +41,24 @@ namespace GladNet.Client
 
 		private readonly ClientPacketHandler NetworkMessageHandler;
 
-		private double timeNowByPoll = 0;
-		private double timeNowByPollComparer = 0;
+		private double timeNowByPoll;
+		private double timeNowByPollComparer;
+
+		public override bool isConnected
+		{
+			get
+			{
+				return _isConnected;
+			}
+		}
 
 #if UNITYDEBUG || UNITYRELEASE
 		public GladNetPeer(IListener listener, ILogger logger = null)
-					: base(null)
+			: base(null)
 		{
+			timeNowByPoll = 0;
+			timeNowByPollComparer = 0;
+
 			ClassLogger = (logger == null ? new UnityLogger(LogType.Debug) : logger);
 
 			NetworkMessageHandler = new ClientPacketHandler(ClassLogger);
@@ -55,7 +66,7 @@ namespace GladNet.Client
 			RecieverListener = listener;
 			//Call the interface method to register the packets.
 			RegisterProtobufPackets(Packet.Register);
-		
+
 			//This registers the default serializer
 			NetworkMessageHandler.Register<GladNetProtobufNetSerializer>();
 
@@ -69,6 +80,9 @@ namespace GladNet.Client
 		public GladNetPeer(IListener listener, ILogger logger) 
 			: base(null)
 		{
+			timeNowByPoll = 0;
+			timeNowByPollComparer = 0;
+
 			ClassLogger = logger;
 			NetworkMessageHandler = new ClientPacketHandler(logger);
 
@@ -102,7 +116,7 @@ namespace GladNet.Client
 
 			//We're the only ones touching the networkPackageQueue other than the producer so it shouldn't ever be
 			//consumed while we dequeue it.
-			for(int i = 0; i < count; i++)
+			for (int i = 0; i < count; i++)
 			{
 				lock (this.networkIncomingEnqueueSyncObj)
 				{
@@ -127,7 +141,7 @@ namespace GladNet.Client
 
 			if (_isConnected == false)
 			{
-				if(RecieverListener != null)
+				if (RecieverListener != null)
 					RecieverListener.OnStatusChange(StatusChange.Disconnected);
 
 				return false;
@@ -153,7 +167,7 @@ namespace GladNet.Client
 #else
 				throw new NullReferenceException("Connection to remote host must have a valid appname and IP address.");
 #endif
-			}	
+			}
 
 			//This should reduce GC which is always terrible for Unity.
 			config.UseMessageRecycling = true;
@@ -170,6 +184,9 @@ namespace GladNet.Client
 			this.SetConnectionDetails(connection, endPoint, connection.RemoteUniqueIdentifier);
 
 			_isConnected = true;
+
+			Interlocked.Exchange(ref timeNowByPoll, NetTime.Now < 3 ? 0 : NetTime.Now);
+			Interlocked.Exchange(ref timeNowByPollComparer, NetTime.Now < 3 ? 0 : NetTime.Now);
 
 			return true;
 		}
@@ -194,7 +211,7 @@ namespace GladNet.Client
 
 		public void StartListener()
 		{
-			if(networkThread != null)
+			if (networkThread != null)
 			{
 				ClassLogger.LogError("Attempted to start listener while listener is spinning.");
 #if !UNITYDEBUG && !UNITYRELEASE
@@ -215,7 +232,7 @@ namespace GladNet.Client
 #endif
 
 
-			if(internalLidgrenClient == null || internalLidgrenClient == null)
+			if (internalLidgrenClient == null || internalLidgrenClient == null)
 			{
 				ClassLogger.LogError("Cannot start listening before connecting.");
 
@@ -241,9 +258,8 @@ namespace GladNet.Client
 						ClassLogger.LogDebug("Stopping network thread.");
 #endif
 						_isConnected = false;
-						if (internalLidgrenClient != null)
-							//Should be thread safe and fine to do.
-							this.Disconnect();
+						//Should be thread safe and fine to do.
+						this.Disconnect();
 					}
 
 					if (msg != null)
@@ -267,11 +283,11 @@ namespace GladNet.Client
 					}
 				}
 			}
-			catch(LoggableException e)
+			catch (LoggableException e)
 			{
 				ClassLogger.LogError(e.Message + e.InnerException != null ? "Inner: " + e.InnerException : "");
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				ClassLogger.LogError(e.Message + e.Data);
 				throw;
@@ -303,19 +319,19 @@ namespace GladNet.Client
 		/// <returns></returns>
 		public bool Register<T>(T encryptorInstance) where T : EncryptionBase
 		{
-			if(encryptorInstance == null)
+			if (encryptorInstance == null)
 			{
 				ClassLogger.LogError("Cannot register a null encryption object.");
 				return false;
 			}
 
-			if(this.EncryptionRegister.HasKey(encryptorInstance.EncryptionTypeByte))
+			if (this.EncryptionRegister.HasKey(encryptorInstance.EncryptionTypeByte))
 			{
 				ClassLogger.LogError("Tried to register an already known encryption object.");
 				return false;
 			}
 
-			if(!isConnected || RecieverListener == null)
+			if (!isConnected || RecieverListener == null)
 			{
 				ClassLogger.LogError("Cannot register encryption objects when not connected.");
 				return false;
@@ -355,14 +371,14 @@ namespace GladNet.Client
 			if (msg == null)
 				return;
 
-			switch(msg.MessageType)
+			switch (msg.MessageType)
 			{
 				case NetIncomingMessageType.StatusChanged:
 					try
 					{
 						HandleStatusChange((NetConnectionStatus)msg.ReadByte());
 					}
-					catch(NetException e)
+					catch (NetException e)
 					{
 #if UNITYDEBUG
 						ClassLogger.LogError("Malformed packet recieved. Packet indicated that it was a status change but had no info.");
@@ -370,7 +386,7 @@ namespace GladNet.Client
 						//TODO: What shall we do when the packet is malformed here?
 #endif
 					}
-					catch(LoggableException e)
+					catch (LoggableException e)
 					{
 						//Checking this because it can cause some nasty GC to make these string adds.
 						if (ClassLogger.isStateEnabled(LogType.Debug))
@@ -385,7 +401,7 @@ namespace GladNet.Client
 					{
 						this.NetworkMessageHandler.DispatchMessage(this, msg, msg.MessageType == NetIncomingMessageType.Data);
 					}
-					catch(LoggableException e)
+					catch (LoggableException e)
 					{
 						//Checking this because it can cause some nasty GC to make these string adds.
 						if (ClassLogger.isStateEnabled(LogType.Debug))
@@ -397,7 +413,7 @@ namespace GladNet.Client
 
 		private void HandleStatusChange(NetConnectionStatus status)
 		{
-			switch(status)
+			switch (status)
 			{
 				case NetConnectionStatus.Connected:
 					QueueStatusChange(StatusChange.Connected);
@@ -417,7 +433,7 @@ namespace GladNet.Client
 		{
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				if(RecieverListener != null)
+				if (RecieverListener != null)
 					networkPackageQueue.Enqueue(() => this.RecieverListener.OnStatusChange(change));
 			}
 		}
@@ -455,7 +471,7 @@ namespace GladNet.Client
 			{
 				this.OnDisconnection();
 				networkPackageQueue.Clear();
-			}	
+			}
 		}
 
 		private void RegisterProtobufPackets(Func<Type, bool> registerAsDefaultFunc)
@@ -473,10 +489,10 @@ namespace GladNet.Client
 				Packet.Register(typeof(EncryptionRequest), true);
 
 				Packet.SetupProtoRuntimePacketInheritance();
-				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);	
+				this.RecieverListener.RegisterProtobufPackets(registerAsDefaultFunc);
 				Packet.LockInProtobufnet();
 			}
-			catch(LoggableException e)
+			catch (LoggableException e)
 			{
 				ClassLogger.LogError(e.Message + e.InnerException != null ? e.InnerException.Message : "");
 				throw;
@@ -496,7 +512,7 @@ namespace GladNet.Client
 
 		public override void PackageRecieve(ResponsePackage package, MessageInfo info)
 		{
-			lock(networkIncomingEnqueueSyncObj)
+			lock (networkIncomingEnqueueSyncObj)
 			{
 				if (RecieverListener != null)
 					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package, info); });
@@ -507,13 +523,25 @@ namespace GladNet.Client
 		{
 			lock (networkIncomingEnqueueSyncObj)
 			{
-				if(RecieverListener != null)
+				if (RecieverListener != null)
 					networkPackageQueue.Enqueue(() => { RecieverListener.RecievePackage(package, info); });
 			}
 		}
 
 		protected override void OnDisconnection()
 		{
+
+			if (InternalNetConnection != null)
+			{
+				InternalNetConnection.Disconnect("disconnect");
+			}
+
+			if (internalLidgrenClient != null)
+			{
+				internalLidgrenClient.Disconnect("disconnect.");
+			}
+
+
 			//We need to clear the register so on reconnects we don't try to re-add or re-use old stale encryption objects.
 			this.EncryptionRegister.Clear();
 		}

@@ -70,6 +70,11 @@ namespace GladNet.Common
 
 		public void Clear()
 		{
+			foreach(EncryptionBase encryptBase in this.encryptionCollection.Values)
+			{
+				encryptBase.Dispose();
+			}
+
 			this.encryptionCollection.Clear();
 		}
 	}

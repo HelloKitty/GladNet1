@@ -34,9 +34,14 @@ namespace GladNet.Common
 
 		public IPEndPoint RemoteConnectionEndpoint { get; private set; }
 		public long UniqueConnectionId { get; private set; }
-		internal NetConnection InternalNetConnection { get; private set; }
 
-		public bool isConnected
+#if !UNITYDEBUG && !UNITYRELEASE
+		internal NetConnection InternalNetConnection { get; private set; }
+#else
+		protected NetConnection InternalNetConnection { get; private set; }
+#endif
+
+		public virtual bool isConnected
 		{
 			get { return InternalNetConnection != null && InternalNetConnection.Status == NetConnectionStatus.Connected; }
 		}
