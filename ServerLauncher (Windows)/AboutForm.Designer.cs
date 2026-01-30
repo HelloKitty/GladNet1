@@ -106,7 +106,7 @@
 			this.InfoTextbox.TabIndex = 5;
 			this.InfoTextbox.Text = "GladNet is a UDP based networking library based on Lidgren gen3 Free and open sou" +
     "rce, requring only attribution, and targeted at Unity3D game developers.\n\nGladNe" +
-    "t (c) 2014 - Andrew Blakely/Glader";
+    "t (c) 2014 - X/Glader";
 			// 
 			// AboutForm
 			// 

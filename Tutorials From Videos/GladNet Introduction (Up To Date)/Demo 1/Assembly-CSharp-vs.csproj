@@ -51,16 +51,16 @@
      <Compile Include="Assets\ResponsePacket.cs" />
      <None Include="Assets\DLLs\GladNet\protobuf-net.xml" />
  <Reference Include="Client">
- <HintPath>C:/Users/Andrew Blakely/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/Client.dll</HintPath>
+ <HintPath>C:/Users/X/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/Client.dll</HintPath>
  </Reference>
  <Reference Include="Common">
- <HintPath>C:/Users/Andrew Blakely/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/Common.dll</HintPath>
+ <HintPath>C:/Users/X/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/Common.dll</HintPath>
  </Reference>
  <Reference Include="Lidgren.Network">
- <HintPath>C:/Users/Andrew Blakely/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/Lidgren.Network.dll</HintPath>
+ <HintPath>C:/Users/X/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/Lidgren.Network.dll</HintPath>
  </Reference>
  <Reference Include="protobuf-net">
- <HintPath>C:/Users/Andrew Blakely/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/protobuf-net.dll</HintPath>
+ <HintPath>C:/Users/X/Documents/GladNet Demos/Demo 1/Assets/DLLs/GladNet/protobuf-net.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

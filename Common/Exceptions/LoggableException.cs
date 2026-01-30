@@ -1,6 +1,6 @@
 ﻿#region copyright
-/// GladNet Copyright (C) 2014 Andrew Blakely 
-/// andrew.blakely@ymail.com
+/// GladNet Copyright (C) 2014 X 
+/// X
 /// GitHub: HeIIoKitty
 /// Unity3D: Glader
 /// Please refer to the repo License file for licensing information
